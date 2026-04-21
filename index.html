@@ -482,6 +482,10 @@
     }
 
     @media (max-width: 920px) {
+      .container {
+        width: min(100% - 22px, 1120px);
+      }
+
       .top-actions,
       .links-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -491,6 +495,14 @@
       .grid-2 {
         grid-template-columns: 1fr;
       }
+
+      .dashboard-panel {
+        order: 1;
+      }
+
+      .panel {
+        order: 2;
+      }
     }
 
     @media (max-width: 640px) {
@@ -498,14 +510,128 @@
         width: min(100% - 16px, 1120px);
       }
 
+      .nav {
+        min-height: 60px;
+      }
+
+      .brand-badge {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+      }
+
+      .brand-text strong {
+        font-size: 0.92rem;
+      }
+
+      .brand-text small {
+        font-size: 0.72rem;
+      }
+
+      .btn {
+        min-height: 38px;
+        padding: 0 14px;
+        font-size: 0.86rem;
+      }
+
+      .hero {
+        padding: 12px 0 8px;
+      }
+
       .top-actions,
-      .links-grid,
-      .mini-stats {
-        grid-template-columns: 1fr 1fr;
+      .links-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+
+      .top-action-card,
+      .hero-panel,
+      .dashboard-panel,
+      .panel,
+      .quick-link-card {
+        border-radius: 16px;
+      }
+
+      .top-action-card {
+        padding: 12px 8px;
+      }
+
+      .top-action-icon,
+      .quick-link-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 0.92rem;
+        margin-bottom: 6px;
+      }
+
+      .top-action-card h4,
+      .quick-link-card h3 {
+        font-size: 0.86rem;
+      }
+
+      .top-action-card span,
+      .quick-link-card p,
+      .clock-box .label,
+      .employee-meta span,
+      .status-item span,
+      .panel-title small,
+      .clock-date,
+      .gps-message {
+        font-size: 0.76rem;
       }
 
       h1 {
-        font-size: 1.8rem;
+        font-size: 1.55rem;
+      }
+
+      .hero-desc {
+        font-size: 0.82rem;
+        line-height: 1.55;
+      }
+
+      .dashboard-top h2,
+      .panel-title h3 {
+        font-size: 0.92rem;
+      }
+
+      .clock-time {
+        font-size: 1.75rem;
+      }
+
+      .mini-stats {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+      }
+
+      .mini-stat {
+        padding: 8px 6px;
+      }
+
+      .mini-stat b {
+        font-size: 0.84rem;
+      }
+
+      .mini-stat span {
+        font-size: 0.7rem;
+      }
+
+      .gps-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .gps-item b {
+        font-size: 0.76rem;
+      }
+
+      .status-item {
+        padding: 9px 10px;
+        align-items: flex-start;
+      }
+
+      .badge,
+      .status-pill {
+        min-width: 24px;
+        padding: 5px 8px;
       }
     }
   </style>
