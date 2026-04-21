@@ -545,35 +545,42 @@
     }
 
     function renderTable(records) {
-      const tbody = document.getElementById('recordTableBody');
-      const tableCard = document.getElementById('tableCard');
-      const emptyState = document.getElementById('emptyState');
+  const tbody = document.getElementById('recordTableBody');
+  const tableCard = document.getElementById('tableCard');
+  const emptyState = document.getElementById('emptyState');
 
-      if (!records.length) {
-        tbody.innerHTML = '';
-        tableCard.style.display = 'none';
-        emptyState.style.display = 'block';
-        return;
-      }
+  if (!records.length) {
+    tbody.innerHTML = '';
+    tableCard.style.display = 'none';
+    emptyState.style.display = 'block';
+    return;
+  }
 
-      tableCard.style.display = 'block';
-      emptyState.style.display = 'none';
+  tableCard.style.display = 'block';
+  emptyState.style.display = 'none';
 
-      tbody.innerHTML = records.map(record => {
-        const action = record.action || '--';
-        const distance = record.distance !== '' && record.distance !== undefined ? `${record.distance} m` : '--';
-        
-        return
-          <tr>
-            <td>${formatDateTime(record.timestamp)}</td>
-            <td>${record.name || '--'}</td>
-            <td><span class="status-tag ${getStatusClass(action)}">${action}</span></td>
-            <td>${distance}</td>
-            <td>${getRangeText(record.inRange)}</td>
-          </tr>
-        `;
-      }).join('');
-    }
+  tbody.innerHTML = records.map(record => {
+    const action = record.action || '--';
+    const distance =
+      record.distance !== '' && record.distance !== undefined
+        ? `${record.distance} m`
+        : '--';
+
+    return `
+      <tr>
+        <td>${formatDateTime(record.timestamp)}</td>
+        <td>${record.name || '--'}</td>
+        <td>
+          <span class="status-tag ${getStatusClass(action)}">
+            ${action}
+          </span>
+        </td>
+        <td>${distance}</td>
+        <td>${getRangeText(record.inRange)}</td>
+      </tr>
+    `;
+  }).join('');
+}
 
     function applyFilters() {
       const actionValue = document.getElementById('actionFilter').value;
