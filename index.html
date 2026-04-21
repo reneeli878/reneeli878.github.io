@@ -145,7 +145,7 @@
       transition: transform 0.18s ease, box-shadow 0.18s ease;
     }
 
-        .top-action-card:hover,
+    .top-action-card:hover,
     .quick-link-card:hover {
       transform: translateY(-2px);
       box-shadow: 0 14px 26px rgba(25, 55, 90, 0.08);
@@ -197,7 +197,7 @@
     .eyebrow {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       padding: 6px 10px;
       border-radius: 999px;
       background: var(--primary-soft);
@@ -239,20 +239,18 @@
     .status-pill,
     .badge {
       min-width: 28px;
-      text-align: center;
-
       padding: 6px 10px;
       border-radius: 999px;
       font-size: 0.75rem;
       font-weight: 800;
       white-space: nowrap;
+      text-align: center;
     }
 
     .status-pill,
     .badge.success {
       font-size: 0.95rem;
       line-height: 1;
-
       background: rgba(22, 163, 74, 0.1);
       color: var(--success);
     }
@@ -277,7 +275,9 @@
     .clock-box .label,
     .employee-meta span,
     .status-item span,
-    .panel-title small {
+    .panel-title small,
+    .clock-date,
+    .gps-message {
       color: var(--muted);
       font-size: 0.8rem;
       line-height: 1.45;
@@ -293,8 +293,6 @@
 
     .clock-date {
       margin-top: 6px;
-      color: var(--muted);
-      font-size: 0.8rem;
     }
 
     .employee-card {
@@ -330,7 +328,7 @@
     .mini-stats {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
+      gap: 10px;
       margin-top: 10px;
     }
 
@@ -397,7 +395,7 @@
     .gps-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
+      gap: 10px;
       margin-top: 8px;
     }
 
@@ -422,13 +420,6 @@
       word-break: break-all;
     }
 
-    .gps-message {
-      color: var(--muted);
-      font-size: 0.8rem;
-      line-height: 1.5;
-      margin-top: 8px;
-    }
-
     .section {
       padding: 10px 0 18px;
     }
@@ -449,7 +440,7 @@
 
     .status-list {
       display: grid;
-      gap: 8px;
+      gap: 10px;
     }
 
     .status-item {
@@ -475,11 +466,6 @@
       color: #748395;
       font-size: 0.84rem;
     }
-      padding: 0 0 22px;
-      text-align: center;
-      color: #748395;
-      font-size: 0.84rem;
-    }
 
     @media (max-width: 920px) {
       .container {
@@ -495,17 +481,13 @@
       .grid-2 {
         grid-template-columns: 1fr;
       }
-
-      .dashboard-panel {
-        order: 1;
-      }
-
-      .panel {
-        order: 2;
-      }
     }
 
     @media (max-width: 640px) {
+      body {
+        background: #f6f9fc;
+      }
+
       .container {
         width: min(100% - 16px, 1120px);
       }
@@ -525,7 +507,7 @@
       }
 
       .brand-text small {
-        font-size: 0.72rem;
+        display: none;
       }
 
       .btn {
@@ -535,38 +517,38 @@
       }
 
       .hero {
-        padding: 12px 0 8px;
+        padding: 10px 0 8px;
       }
 
-      .top-actions,
-      .links-grid {
+      .top-actions {
         grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
+        gap: 10px;
+        margin-bottom: 10px;
       }
 
       .top-action-card,
-      .hero-panel,
       .dashboard-panel,
       .panel,
       .quick-link-card {
-        border-radius: 16px;
+        border-radius: 18px;
       }
 
       .top-action-card {
-        padding: 12px 8px;
+        min-height: 104px;
+        padding: 16px 10px;
       }
 
       .top-action-icon,
       .quick-link-icon {
-        width: 36px;
-        height: 36px;
-        font-size: 0.92rem;
-        margin-bottom: 6px;
+        width: 42px;
+        height: 42px;
+        font-size: 1rem;
+        margin-bottom: 8px;
       }
 
       .top-action-card h4,
       .quick-link-card h3 {
-        font-size: 0.86rem;
+        font-size: 0.94rem;
       }
 
       .top-action-card span,
@@ -576,56 +558,120 @@
       .status-item span,
       .panel-title small,
       .clock-date,
-      .gps-message {
-        font-size: 0.76rem;
+      .gps-message,
+      .gps-item small {
+        font-size: 0.78rem;
       }
 
-      h1 {
-        font-size: 1.55rem;
+      .hero-layout,
+      .grid-2 {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
       }
 
-      .hero-desc {
-        font-size: 0.82rem;
-        line-height: 1.55;
+      .hero-panel {
+        display: none;
+      }
+
+      .dashboard-panel {
+        order: 1;
+        padding: 14px;
+      }
+
+      .grid-2 > .panel {
+        order: 2;
+        padding: 14px;
+      }
+
+      .section:last-of-type .panel {
+        padding: 14px;
       }
 
       .dashboard-top h2,
       .panel-title h3 {
-        font-size: 0.92rem;
+        font-size: 1rem;
+      }
+
+      .clock-box {
+        padding: 14px;
       }
 
       .clock-time {
-        font-size: 1.75rem;
+        font-size: 2rem;
+      }
+
+      .employee-card {
+        margin-top: 10px;
+        padding: 10px;
+      }
+
+      .employee-meta span:last-child {
+        display: none;
       }
 
       .mini-stats {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 6px;
+        grid-template-columns: 1fr;
+        gap: 8px;
       }
 
       .mini-stat {
-        padding: 8px 6px;
+        padding: 10px 12px;
+        text-align: left;
       }
 
       .mini-stat b {
-        font-size: 0.84rem;
+        font-size: 1rem;
+        margin-bottom: 3px;
       }
 
-      .mini-stat span {
-        font-size: 0.7rem;
+      .gps-card {
+        margin-top: 10px;
+        padding: 10px;
       }
 
       .gps-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .gps-grid .gps-item:nth-child(1),
+      .gps-grid .gps-item:nth-child(2) {
+        display: none;
+      }
+
+      .gps-item {
+        padding: 8px 10px;
       }
 
       .gps-item b {
-        font-size: 0.76rem;
+        font-size: 0.82rem;
+      }
+
+      .status-list {
+        gap: 8px;
       }
 
       .status-item {
-        padding: 9px 10px;
+        padding: 10px;
         align-items: flex-start;
+      }
+
+      .status-item strong {
+        font-size: 0.84rem;
+      }
+
+      .status-list .status-item:nth-child(n+4) {
+        display: none;
+      }
+
+      .links-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .quick-link-card {
+        padding: 14px 12px;
+        min-height: 110px;
       }
 
       .badge,
@@ -675,6 +721,68 @@
             <span>Back</span>
           </a>
         </div>
+
+        <div class="hero-layout">
+          <div class="hero-panel">
+            <div class="eyebrow">📍 LUFTQI 打卡系統</div>
+            <h1>出勤系統首頁</h1>
+            <p class="hero-desc">桌機看資訊，手機先操作。首頁主軸先把打卡與今日狀態擺到最前面。</p>
+          </div>
+
+          <aside class="dashboard-panel">
+            <div class="dashboard-top">
+              <h2>今日出勤儀表板</h2>
+              <div class="status-pill">●</div>
+            </div>
+
+            <div class="clock-box">
+              <div class="label">目前時間</div>
+              <div class="clock-time" id="clock">--:--:--</div>
+              <div class="clock-date" id="dateText">載入中...</div>
+            </div>
+
+            <div class="employee-card">
+              <div class="avatar">王</div>
+              <div class="employee-meta">
+                <strong>王小明</strong>
+                <span>部門：營運管理部</span>
+                <span>員工編號：EMP-001</span>
+              </div>
+            </div>
+
+            <div class="mini-stats">
+              <div class="mini-stat"><b id="workStatus">未打卡</b><span>目前狀態</span></div>
+              <div class="mini-stat"><b id="todayClockIn">--:--</b><span>今日上班</span></div>
+              <div class="mini-stat"><b id="distanceText">-- m</b><span>距離公司</span></div>
+            </div>
+
+            <div class="gps-card">
+              <div class="gps-card-title">
+                <strong>GPS 打卡測試</strong>
+                <span class="gps-dot" id="gpsDot"></span>
+              </div>
+              <div class="gps-grid">
+                <div class="gps-item">
+                  <small>緯度</small>
+                  <b id="latText">--</b>
+                </div>
+                <div class="gps-item">
+                  <small>經度</small>
+                  <b id="lngText">--</b>
+                </div>
+                <div class="gps-item">
+                  <small>精確度</small>
+                  <b id="accuracyText">--</b>
+                </div>
+                <div class="gps-item">
+                  <small>範圍判定</small>
+                  <b id="rangeText">尚未測試</b>
+                </div>
+              </div>
+              <div class="gps-message" id="gpsMessage">按上方任一打卡按鈕後，這裡會顯示 GPS 取點結果與是否在公司範圍內。</div>
+            </div>
+          </aside>
+        </div>
       </div>
     </section>
 
@@ -695,64 +803,6 @@
           </div>
         </section>
 
-        <aside class="dashboard-panel">
-          <div class="dashboard-top">
-            <h2>今日出勤儀表板</h2>
-            <div class="status-pill">●</div>
-          </div>
-
-          <div class="clock-box">
-            <div class="label">目前時間</div>
-            <div class="clock-time" id="clock">--:--:--</div>
-            <div class="clock-date" id="dateText">載入中...</div>
-          </div>
-
-          <div class="employee-card">
-            <div class="avatar">王</div>
-            <div class="employee-meta">
-              <strong>王小明</strong>
-              <span>部門：營運管理部</span>
-              <span>員工編號：EMP-001</span>
-            </div>
-          </div>
-
-          <div class="mini-stats">
-            <div class="mini-stat"><b id="workStatus">未打卡</b><span>目前狀態</span></div>
-            <div class="mini-stat"><b id="todayClockIn">--:--</b><span>今日上班</span></div>
-            <div class="mini-stat"><b id="distanceText">-- m</b><span>距離公司</span></div>
-          </div>
-
-          <div class="gps-card">
-            <div class="gps-card-title">
-              <strong>GPS 打卡測試</strong>
-              <span class="gps-dot" id="gpsDot"></span>
-            </div>
-            <div class="gps-grid">
-              <div class="gps-item">
-                <small>緯度</small>
-                <b id="latText">--</b>
-              </div>
-              <div class="gps-item">
-                <small>經度</small>
-                <b id="lngText">--</b>
-              </div>
-              <div class="gps-item">
-                <small>精確度</small>
-                <b id="accuracyText">--</b>
-              </div>
-              <div class="gps-item">
-                <small>範圍判定</small>
-                <b id="rangeText">尚未測試</b>
-              </div>
-            </div>
-            <div class="gps-message" id="gpsMessage">按上方任一打卡按鈕後，這裡會顯示 GPS 取點結果與是否在公司範圍內。</div>
-          </div>
-        </aside>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="container">
         <section class="panel">
           <div class="panel-title">
             <h3>常用入口</h3>
