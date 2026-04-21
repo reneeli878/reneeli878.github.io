@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LINE 打卡系統首頁</title>
+  <style>
+    :root {
+      --primary: rgb(60, 130, 191);
+      --primary-dark: rgb(45, 101, 149);
+      --primary-deep: rgb(31, 77, 117);
+      --primary-soft: rgba(60, 130, 191, 0.1);
+      --bg: #f3f8fc;
+      --text: #1f2d3d;
+      --muted: #66788a;
+      --line: #dbe7f1;
+      --success: #16a34a;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow-md: 0 12px 24px rgba(25, 55, 90, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top right, rgba(60, 130, 191, 0.12), transparent 28%),
+        linear-gradient(180deg, #f8fbfe 0%, var(--bg) 60%, #eef5fb 100%);
+    }
+
+    a { text-decoration: none; color: inherit; }
+
+    .container {
+      width: min(1120px, calc(100% - 28px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(14px);
+      background: rgba(255, 255, 255, 0.82);
+      border-bottom: 1px solid rgba(219, 231, 241, 0.86);
+    }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 66px;
+      gap: 14px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+    }
+
+    .brand-badge {
+      width: 70px;
+      height: 40px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-deep) 100%);
+      box-shadow: 0 10px 20px rgba(60, 130, 191, 0.22);
+    }
+
+    .brand-text strong {
+      display: block;
+      font-size: 1rem;
+      line-height: 1.1;
+    }
+
+    .brand-text small {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .btn {
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0 18px;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      font-weight: 800;
+      transition: transform 0.18s ease;
+    }
+
+    .btn:hover { transform: translateY(-2px); }
+
+    .btn-primary {
+      color: white;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      box-shadow: 0 10px 18px rgba(60, 130, 191, 0.22);
+    }
+
+    .hero { padding: 16px 0 10px; }
+
+    .top-actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .top-action-card,
+    .dashboard-panel,
+    .panel,
+    .quick-link-card {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(219, 231, 241, 0.96);
+      box-shadow: var(--shadow-md);
+    }
+
+    .top-action-card {
+      cursor: pointer;
+      padding: 14px 10px;
+      border-radius: 18px;
+      text-align: center;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .top-action-card:hover,
+    .quick-link-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 26px rgba(25, 55, 90, 0.08);
+    }
+
+    .top-action-icon,
+    .quick-link-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: var(--primary-soft);
+      color: var(--primary-deep);
+      font-size: 1rem;
+      margin: 0 auto 8px;
+    }
+
+    .top-action-card h4,
+    .quick-link-card h3 {
+      margin: 0;
+      font-size: 0.92rem;
+      text-align: center;
+    }
+
+    .top-action-card span,
+    .quick-link-card p {
+      display: block;
+      margin-top: 6px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+
+    .desktop-main-grid {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .secondary-grid {
+      margin-top: 12px;
+    }
+
+    .dashboard-panel,
+    .panel,
+    .quick-link-card {
+      border-radius: 20px;
+      padding: 16px;
+    }
+
+    .dashboard-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .dashboard-top h2,
+    .panel-title h3 {
+      margin: 0;
+      font-size: 0.98rem;
+    }
+
+    .status-pill,
+    .badge {
+      min-width: 28px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    .status-pill,
+    .badge.success {
+      font-size: 0.95rem;
+      line-height: 1;
+      background: rgba(22, 163, 74, 0.1);
+      color: var(--success);
+    }
+
+    .badge.warning {
+      color: #b45309;
+      background: rgba(245, 158, 11, 0.14);
+    }
+
+    .badge.danger {
+      color: var(--danger);
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .clock-box {
+      background: linear-gradient(135deg, rgba(60,130,191,0.11), rgba(60,130,191,0.03));
+      border: 1px solid rgba(60,130,191,0.12);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .clock-box .label,
+    .employee-meta span,
+    .status-item span,
+    .clock-date,
+    .gps-message {
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.45;
+    }
+
+    .clock-time {
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      color: var(--primary-deep);
+      line-height: 1;
+    }
+
+    .clock-date { margin-top: 6px; }
+
+    .employee-card {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: center;
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 14px;
+      background: #fbfdff;
+      border: 1px solid var(--line);
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      color: white;
+      background: linear-gradient(135deg, var(--primary), var(--primary-deep));
+    }
+
+    .employee-meta strong,
+    .status-item strong {
+      display: block;
+      font-size: 0.88rem;
+      margin-bottom: 2px;
+    }
+
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .mini-stat {
+      padding: 10px 8px;
+      border-radius: 12px;
+      background: white;
+      border: 1px solid var(--line);
+      text-align: center;
+    }
+
+    .mini-stat b {
+      display: block;
+      font-size: 0.92rem;
+      color: var(--primary-deep);
+      margin-bottom: 4px;
+    }
+
+    .mini-stat span {
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .gps-card {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 14px;
+      background: #fbfdff;
+      border: 1px solid var(--line);
+    }
+
+    .gps-card-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .gps-card-title strong { font-size: 0.88rem; }
+
+    .gps-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--warning);
+      display: inline-block;
+      box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.12);
+    }
+
+    .gps-dot.success {
+      background: var(--success);
+      box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.12);
+    }
+
+    .gps-dot.danger {
+      background: var(--danger);
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
+    }
+
+    .gps-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .gps-item {
+      padding: 8px;
+      border-radius: 10px;
+      background: white;
+      border: 1px solid var(--line);
+    }
+
+    .gps-item small {
+      display: block;
+      color: var(--muted);
+      font-size: 0.72rem;
+      margin-bottom: 4px;
+    }
+
+    .gps-item b {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--primary-deep);
+      word-break: break-all;
+    }
+
+    .section { padding: 0 0 18px; }
+
+    .panel-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .status-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .status-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #fbfdff;
+    }
+
+    .links-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    footer {
+      padding: 0 0 22px;
+      text-align: center;
+      color: #748395;
+      font-size: 0.84rem;
+    }
+
+    @media (max-width: 920px) {
+      .container { width: min(100% - 22px, 1120px); }
+
+      .top-actions,
+      .links-grid { grid-template-columns: repeat(2, 1fr); }
+
+      .desktop-main-grid,
+      .secondary-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      body { background: #f6f9fc; }
+
+      .container { width: min(100% - 16px, 1120px); }
+
+      .nav { min-height: 60px; }
+
+      .brand-badge {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+      }
+
+      .brand-text strong { font-size: 0.92rem; }
+      .brand-text small { display: none; }
+
+      .btn {
+        min-height: 38px;
+        padding: 0 14px;
+        font-size: 0.86rem;
+      }
+
+      .hero { padding: 10px 0 8px; }
+
+      .top-actions {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .top-action-card,
+      .dashboard-panel,
+      .panel,
+      .quick-link-card {
+        border-radius: 18px;
+      }
+
+      .top-action-card {
+        min-height: 104px;
+        padding: 16px 10px;
+      }
+
+      .top-action-icon,
+      .quick-link-icon {
+        width: 42px;
+        height: 42px;
+        font-size: 1rem;
+        margin-bottom: 8px;
+      }
+
+      .top-action-card h4,
+      .quick-link-card h3 { font-size: 0.94rem; }
+
+      .top-action-card span,
+      .quick-link-card p,
+      .clock-box .label,
+      .employee-meta span,
+      .status-item span,
+      .clock-date,
+      .gps-message,
+      .gps-item small {
+        font-size: 0.78rem;
+      }
+
+      .desktop-main-grid,
+      .secondary-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .dashboard-panel,
+      .panel { padding: 14px; }
+
+      .clock-time { font-size: 2rem; }
+
+      .employee-card {
+        margin-top: 10px;
+        padding: 10px;
+      }
+
+      .employee-meta span:last-child { display: none; }
+
+      .mini-stats {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .mini-stat {
+        padding: 10px 12px;
+        text-align: left;
+      }
+
+      .mini-stat b {
+        font-size: 1rem;
+        margin-bottom: 3px;
+      }
+
+      .gps-card {
+        margin-top: 10px;
+        padding: 10px;
+      }
+
+      .gps-grid { grid-template-columns: 1fr 1fr; }
+
+      .gps-grid .gps-item:nth-child(1),
+      .gps-grid .gps-item:nth-child(2) { display: none; }
+
+      .gps-item { padding: 8px 10px; }
+      .gps-item b { font-size: 0.82rem; }
+
+      .status-list { gap: 8px; }
+
+      .status-item {
+        padding: 10px;
+        align-items: flex-start;
+      }
+
+      .status-item strong { font-size: 0.84rem; }
+
+      #recordList .status-item:nth-child(n+4) { display: none; }
+
+      .links-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .quick-link-card {
+        padding: 14px 12px;
+        min-height: 110px;
+      }
+
+      .badge,
+      .status-pill {
+        min-width: 24px;
+        padding: 5px 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container nav">
+      <div class="brand">
+        <div class="brand-badge">LUFTQI</div>
+        <div class="brand-text">
+          <strong>打卡系統</strong>
+          <small>Attendance Portal</small>
+        </div>
+      </div>
+      <a class="btn btn-primary" href="#">立即打卡</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="top-actions">
+          <a class="top-action-card" href="#" onclick="handleAction('clockin'); return false;">
+            <div class="top-action-icon">🟢</div>
+            <h4>上班打卡</h4>
+            <span>Clock In</span>
+          </a>
+          <a class="top-action-card" href="#" onclick="handleAction('clockout'); return false;">
+            <div class="top-action-icon">🔵</div>
+            <h4>下班打卡</h4>
+            <span>Clock Out</span>
+          </a>
+          <a class="top-action-card" href="#" onclick="handleAction('goout'); return false;">
+            <div class="top-action-icon">🟠</div>
+            <h4>外出打卡</h4>
+            <span>Go Out</span>
+          </a>
+          <a class="top-action-card" href="#" onclick="handleAction('back'); return false;">
+            <div class="top-action-icon">🟣</div>
+            <h4>返回公司</h4>
+            <span>Back</span>
+          </a>
+        </div>
+
+        <div class="desktop-main-grid">
+          <section class="panel">
+            <div class="panel-title">
+              <h3>打卡紀錄（最近 5 筆）</h3>
+              <small>即時資料</small>
+            </div>
+
+            <div class="status-list" id="recordList">
+              <div class="status-item">
+                <div>
+                  <strong>載入中...</strong>
+                  <span>正在讀取最新打卡紀錄</span>
+                </div>
+                <div class="badge success">同步中</div>
+              </div>
+            </div>
+          </section>
+
+          <aside class="dashboard-panel">
+            <div class="dashboard-top">
+              <h2>今日出勤儀表板</h2>
+              <div class="status-pill">●</div>
+            </div>
+
+            <div class="clock-box">
+              <div class="label">目前時間</div>
+              <div class="clock-time" id="clock">--:--:--</div>
+              <div class="clock-date" id="dateText">載入中...</div>
+            </div>
+
+            <div class="employee-card">
+              <div class="avatar" id="displayName"></div>
+              <div class="employee-meta">
+                <strong id="displayName"></strong>
+                <span id="displayDept">部門：營運管理部</span>
+                <span id="displayUserId">員工編號：--</span>
+              </div>
+            </div>
+
+            <div class="mini-stats">
+              <div class="mini-stat"><b id="workStatus">未打卡</b><span>目前狀態</span></div>
+              <div class="mini-stat"><b id="distanceText">-- m</b><span>距離公司</span></div>
+            </div>
+
+            <div class="gps-card">
+              <div class="gps-card-title">
+                <strong>GPS 打卡測試</strong>
+                <span class="gps-dot" id="gpsDot"></span>
+              </div>
+              <div class="gps-grid">
+                <div class="gps-item">
+                  <small>緯度</small>
+                  <b id="latText">--</b>
+                </div>
+                <div class="gps-item">
+                  <small>經度</small>
+                  <b id="lngText">--</b>
+                </div>
+                <div class="gps-item">
+                  <small>精確度</small>
+                  <b id="accuracyText">--</b>
+                </div>
+                <div class="gps-item">
+                  <small>範圍判定</small>
+                  <b id="rangeText">尚未測試</b>
+                </div>
+              </div>
+              <div class="gps-message" id="gpsMessage">按上方任一打卡按鈕後，這裡會顯示 GPS 取點結果與是否在公司範圍內。</div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container secondary-grid">
+        <section class="panel">
+          <div class="panel-title">
+            <h3>其他功能</h3>
+          </div>
+
+          <div class="links-grid">
+            <a class="quick-link-card" href="#">
+              <div class="quick-link-icon">📝</div>
+              <h3>補打卡申請</h3>
+              <p>異常補登</p>
+            </a>
+            <a class="quick-link-card" href="#">
+              <div class="quick-link-icon">🌴</div>
+              <h3>請假申請</h3>
+              <p>假單流程</p>
+            </a>
+            <a class="quick-link-card" href="myAttendance.html">
+              <div class="quick-link-icon">📅</div>
+              <h3>出勤查詢</h3>
+              <p>完整記錄</p>
+            </a>
+            <a class="quick-link-card" href="#">
+              <div class="quick-link-icon">🛠️</div>
+              <h3>管理後台</h3>
+              <p>系統管理</p>
+            </a>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    © 2026 LINE Attendance System Home. Built for GitHub Pages.
+  </footer>
+
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script>
+    const LIFF_ID = "2008602232-c53WoD3q";
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxSw2YDB2z7BDj_ykkm_qlgwRiyPQxJqX5IpgKuVRBppL9urxMOR38oq_nnSzPlR6LL/exec";
+
+    const OFFICE_LOCATION = {
+      lat: 24.9585756,
+      lng: 121.2461472,
+      radius: 150
+    };
+
+    async function initLiff() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+
+        const profile = await liff.getProfile();
+        document.getElementById('displayName').textContent = profile.displayName || '已登入使用者';
+        document.getElementById('displayUserId').textContent = `LINE ID：${profile.userId.slice(0, 8)}...`;
+      } catch (error) {
+        console.error('LIFF 初始化失敗:', error);
+        document.getElementById('gpsMessage').textContent = `LIFF 初始化失敗：${error.message}`;
+      }
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const time = now.toLocaleTimeString('zh-TW', { hour12: false });
+      const date = now.toLocaleDateString('zh-TW', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'long'
+      });
+
+      document.getElementById('clock').textContent = time;
+      document.getElementById('dateText').textContent = date;
+    }
+
+    function formatRecordDate(dateString) {
+      const date = new Date(dateString);
+      if (Number.isNaN(date.getTime())) {
+        return dateString || '--';
+      }
+      return date.toLocaleString('zh-TW', {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+    }
+
+    function setGpsDot(mode) {
+      const gpsDot = document.getElementById('gpsDot');
+      gpsDot.className = 'gps-dot';
+      if (mode === 'success') gpsDot.classList.add('success');
+      if (mode === 'danger') gpsDot.classList.add('danger');
+    }
+
+    function toRadians(value) {
+      return value * (Math.PI / 180);
+    }
+
+    function calculateDistanceMeters(lat1, lng1, lat2, lng2) {
+      const earthRadius = 6371000;
+      const dLat = toRadians(lat2 - lat1);
+      const dLng = toRadians(lng2 - lng1);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return earthRadius * c;
+    }
+
+    function getActionBadge(action) {
+      if (action && action.includes('外出')) return 'warning';
+      if (action && (action.includes('失敗') || action.includes('異常'))) return 'danger';
+      return 'success';
+    }
+
+    async function sendAttendanceToGAS(payload) {
+      const response = await fetch(GAS_WEB_APP_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      return await response.json();
+    }
+
+    async function fetchRecentRecords() {
+      const recordList = document.getElementById('recordList');
+
+      try {
+        const response = await fetch(`${GAS_WEB_APP_URL}?action=recent`);
+        const result = await response.json();
+
+        if (!result.ok || !Array.isArray(result.records)) {
+          throw new Error(result.message || '讀取失敗');
+        }
+
+        if (result.records.length === 0) {
+          recordList.innerHTML = `
+            <div class="status-item">
+              <div>
+                <strong>目前沒有打卡紀錄</strong>
+                <span>完成第一筆打卡後，這裡會自動更新</span>
+              </div>
+              <div class="badge warning">空白</div>
+            </div>
+          `;
+          document.getElementById('workStatus').textContent = '未打卡';
+          document.getElementById('distanceText').textContent = '-- m';
+          return;
+        }
+
+        const latestRecord = result.records[0];
+        document.getElementById('workStatus').textContent = latestRecord.action || '未打卡';
+        document.getElementById('distanceText').textContent = latestRecord.distance !== '' && latestRecord.distance !== undefined ? `${latestRecord.distance} m` : '-- m';
+
+        recordList.innerHTML = result.records.map((record) => {
+          const timestamp = formatRecordDate(record.timestamp);
+          const action = record.action || '未分類';
+          const name = record.name || '未知使用者';
+          const distance = record.distance !== '' && record.distance !== undefined ? `${record.distance} m` : '--';
+          const badgeClass = getActionBadge(action);
+
+          return `
+            <div class="status-item">
+              <div>
+                <strong>${timestamp} ${action}</strong>
+                <span>${name} ・ 距離公司 ${distance}</span>
+              </div>
+              <div class="badge ${badgeClass}">${action}</div>
+            </div>
+          `;
+        }).join('');
+      } catch (error) {
+        console.error('讀取最近紀錄失敗:', error);
+        recordList.innerHTML = `
+          <div class="status-item">
+            <div>
+              <strong>讀取失敗</strong>
+              <span>${error.message}</span>
+            </div>
+            <div class="badge danger">失敗</div>
+          </div>
+        `;
+      }
+    }
+
+    async function updateGpsDisplay(position, actionLabel) {
+      const { latitude, longitude, accuracy } = position.coords;
+      const distance = calculateDistanceMeters(
+        latitude,
+        longitude,
+        OFFICE_LOCATION.lat,
+        OFFICE_LOCATION.lng
+      );
+      const isInRange = distance <= OFFICE_LOCATION.radius;
+
+      document.getElementById('latText').textContent = latitude.toFixed(6);
+      document.getElementById('lngText').textContent = longitude.toFixed(6);
+      document.getElementById('accuracyText').textContent = `± ${Math.round(accuracy)} m`;
+      document.getElementById('distanceText').textContent = `${Math.round(distance)} m`;
+      document.getElementById('rangeText').textContent = isInRange ? '可打卡' : '超出範圍';
+
+      if (!isInRange) {
+        document.getElementById('gpsMessage').textContent = `距離公司 ${Math.round(distance)} 公尺，超出打卡範圍，無法打卡`;
+        document.getElementById('workStatus').textContent = '位置異常';
+        setGpsDot('danger');
+        return;
+      }
+
+      document.getElementById('gpsMessage').textContent = 'GPS 驗證成功，資料送出中...';
+
+      try {
+        if (!liff.isLoggedIn()) {
+          throw new Error('尚未登入 LINE');
+        }
+
+        const profile = await liff.getProfile();
+
+        const payload = {
+          action: actionLabel,
+          name: profile.displayName,
+          userId: profile.userId,
+          latitude,
+          longitude,
+          accuracy: Math.round(accuracy),
+          distance: Math.round(distance),
+          inRange: true
+        };
+
+        const result = await sendAttendanceToGAS(payload);
+
+        if (result.ok) {
+          document.getElementById('gpsMessage').textContent = `${actionLabel} 打卡成功 ✅`;
+          document.getElementById('workStatus').textContent = actionLabel;
+          setGpsDot('success');
+          await fetchRecentRecords();
+        } else {
+          document.getElementById('gpsMessage').textContent = `寫入失敗：${result.message}`;
+          setGpsDot('danger');
+        }
+      } catch (error) {
+        console.error('送出打卡失敗:', error);
+        document.getElementById('gpsMessage').textContent = `送出失敗：${error.message}`;
+        setGpsDot('danger');
+      }
+    }
+
+    function handleGpsError(error) {
+      const messageMap = {
+        1: '定位權限被拒絕，請先允許位置存取。',
+        2: '目前無法取得定位資訊，請確認 GPS 或網路狀態。',
+        3: '定位逾時，請到空曠處後再試一次。'
+      };
+
+      document.getElementById('gpsMessage').textContent = messageMap[error.code] || '定位失敗，請稍後再試。';
+      document.getElementById('rangeText').textContent = '定位失敗';
+      document.getElementById('accuracyText').textContent = '--';
+      document.getElementById('latText').textContent = '--';
+      document.getElementById('lngText').textContent = '--';
+      document.getElementById('distanceText').textContent = '-- m';
+      document.getElementById('workStatus').textContent = '定位失敗';
+      setGpsDot('danger');
+    }
+
+    function handleAction(type) {
+      const actionMap = {
+        clockin: '已上班',
+        clockout: '已下班',
+        goout: '外出中',
+        back: '返回公司'
+      };
+
+      if (!navigator.geolocation) {
+        document.getElementById('gpsMessage').textContent = '這個裝置或瀏覽器不支援 GPS 定位。';
+        document.getElementById('rangeText').textContent = '不支援';
+        setGpsDot('danger');
+        return;
+      }
+
+      document.getElementById('gpsMessage').textContent = 'GPS 定位中，請稍候...';
+      document.getElementById('rangeText').textContent = '定位中';
+      setGpsDot();
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => updateGpsDisplay(position, actionMap[type] || '打卡完成'),
+        handleGpsError,
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    }
+
+    initLiff();
+    updateClock();
+    fetchRecentRecords();
+    setInterval(updateClock, 1000);
+  </script>
+</body>
+</html>
