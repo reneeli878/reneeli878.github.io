@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>我的出勤查詢</title>
+  <style>
+    :root {
+      --primary: rgb(60, 130, 191);
+      --primary-dark: rgb(45, 101, 149);
+      --primary-deep: rgb(31, 77, 117);
+      --primary-soft: rgba(60, 130, 191, 0.1);
+      --bg: #f3f8fc;
+      --text: #1f2d3d;
+      --muted: #66788a;
+      --line: #dbe7f1;
+      --success: #16a34a;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow-md: 0 12px 24px rgba(25, 55, 90, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top right, rgba(60, 130, 191, 0.12), transparent 28%),
+        linear-gradient(180deg, #f8fbfe 0%, var(--bg) 60%, #eef5fb 100%);
+    }
+
+    a { text-decoration: none; color: inherit; }
+
+    .container {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(14px);
+      background: rgba(255, 255, 255, 0.82);
+      border-bottom: 1px solid rgba(219, 231, 241, 0.86);
+    }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 66px;
+      gap: 14px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+    }
+
+    .brand-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-deep) 100%);
+      box-shadow: 0 10px 20px rgba(60, 130, 191, 0.22);
+    }
+
+    .brand-text strong {
+      display: block;
+      font-size: 1rem;
+      line-height: 1.1;
+    }
+
+    .brand-text small {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .btn {
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0 18px;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      font-weight: 800;
+      transition: transform 0.18s ease;
+    }
+
+    .btn:hover { transform: translateY(-2px); }
+
+    .btn-primary {
+      color: white;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      box-shadow: 0 10px 18px rgba(60, 130, 191, 0.22);
+    }
+
+    .btn-secondary {
+      background: white;
+      color: var(--primary-deep);
+      border: 1px solid rgba(60, 130, 191, 0.14);
+      box-shadow: var(--shadow-md);
+    }
+
+    .page-head { padding: 18px 0 12px; }
+
+    .head-card,
+    .filter-card,
+    .summary-card,
+    .table-card,
+    .empty-card {
+      background: rgba(255,255,255,0.92);
+      border: 1px solid rgba(219, 231, 241, 0.96);
+      box-shadow: var(--shadow-md);
+      border-radius: 20px;
+    }
+
+    .head-card {
+      padding: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary-dark);
+      font-size: 0.82rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.6rem, 3vw, 2.3rem);
+      line-height: 1.1;
+      letter-spacing: -0.04em;
+    }
+
+    .head-desc {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 0.9rem;
+    }
+
+    .section { padding: 0 0 14px; }
+
+    .filter-card,
+    .summary-card,
+    .table-card,
+    .empty-card { padding: 16px; }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr 0.9fr 0.9fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      min-height: 42px;
+      padding: 0 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: white;
+      font: inherit;
+      color: var(--text);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .summary-item {
+      border: 1px solid var(--line);
+      background: #fbfdff;
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .summary-item small {
+      display: block;
+      color: var(--muted);
+      font-size: 0.78rem;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .summary-item b {
+      display: block;
+      color: var(--primary-deep);
+      font-size: 1.1rem;
+    }
+
+    .table-scroll { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.88rem;
+      vertical-align: middle;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 800;
+      background: #f8fbfe;
+      position: sticky;
+      top: 0;
+    }
+
+    .status-tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 72px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .status-success {
+      background: rgba(22, 163, 74, 0.1);
+      color: var(--success);
+    }
+
+    .status-warning {
+      background: rgba(245, 158, 11, 0.14);
+      color: #b45309;
+    }
+
+    .status-danger {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+    }
+
+    .muted { color: var(--muted); }
+
+    .empty-card {
+      text-align: center;
+      color: var(--muted);
+      line-height: 1.7;
+      display: none;
+    }
+
+    @media (max-width: 980px) {
+      .filter-grid,
+      .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .head-card { display: block; }
+    }
+
+    @media (max-width: 640px) {
+      .container { width: min(100% - 16px, 1180px); }
+
+      .nav { min-height: 60px; }
+
+      .brand-badge {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+      }
+
+      .brand-text strong { font-size: 0.92rem; }
+      .brand-text small { display: none; }
+
+      .btn {
+        min-height: 38px;
+        padding: 0 14px;
+        font-size: 0.86rem;
+      }
+
+      .filter-grid,
+      .summary-grid { grid-template-columns: 1fr; }
+
+      .head-card,
+      .filter-card,
+      .summary-card,
+      .table-card,
+      .empty-card {
+        border-radius: 18px;
+        padding: 14px;
+      }
+
+      h1 { font-size: 1.45rem; }
+
+      .head-desc,
+      .field label,
+      th,
+      td { font-size: 0.8rem; }
+
+      table { min-width: 760px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container nav">
+      <div class="brand">
+        <div class="brand-badge">查</div>
+        <div class="brand-text">
+          <strong>我的出勤查詢</strong>
+          <small>My Attendance</small>
+        </div>
+      </div>
+      <a class="btn btn-secondary" href="index.html">返回首頁</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-head">
+      <div class="container">
+        <div class="head-card">
+          <div>
+            <div class="eyebrow">📊 個人出勤紀錄</div>
+            <h1>我的出勤查詢頁</h1>
+            <p class="head-desc">登入後自動帶入 LINE 身分，只查自己的出勤紀錄。桌機像個人報表台，手機像可滑動的查詢面板。</p>
+          </div>
+          <button class="btn btn-primary" id="refreshBtn" type="button">重新整理</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="filter-card">
+          <div class="filter-grid">
+            <div class="field">
+              <label for="currentUserName">目前查詢對象</label>
+              <input id="currentUserName" type="text" value="載入中..." readonly />
+            </div>
+            <div class="field">
+              <label for="actionFilter">打卡類型</label>
+              <select id="actionFilter">
+                <option value="">全部</option>
+                <option value="已上班">已上班</option>
+                <option value="已下班">已下班</option>
+                <option value="外出中">外出中</option>
+                <option value="返回公司">返回公司</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="rangeFilter">範圍狀態</label>
+              <select id="rangeFilter">
+                <option value="">全部</option>
+                <option value="true">範圍內</option>
+                <option value="false">範圍外</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="startDate">起始日期</label>
+              <input id="startDate" type="date" />
+            </div>
+            <div class="field">
+              <label for="endDate">結束日期</label>
+              <input id="endDate" type="date" />
+            </div>
+            <button class="btn btn-primary" id="filterBtn" type="button">套用篩選</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="summary-card">
+          <div class="summary-grid">
+            <div class="summary-item">
+              <small>符合筆數</small>
+              <b id="summaryTotal">0</b>
+            </div>
+            <div class="summary-item">
+              <small>上班打卡</small>
+              <b id="summaryClockIn">0</b>
+            </div>
+            <div class="summary-item">
+              <small>下班打卡</small>
+              <b id="summaryClockOut">0</b>
+            </div>
+            <div class="summary-item">
+              <small>外出相關</small>
+              <b id="summaryGoOut">0</b>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="table-card" id="tableCard">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>時間</th>
+                  <th>我的姓名</th>
+                  <th>動作</th>
+                  <th>距離公司</th>
+                  <th>範圍狀態</th>
+                  <th>精確度</th>
+                  <th>緯度</th>
+                  <th>經度</th>
+                </tr>
+              </thead>
+              <tbody id="recordTableBody">
+                <tr>
+                  <td colspan="8" class="muted">載入中...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="empty-card" id="emptyState">
+          目前沒有符合條件的紀錄。<br>
+          可以調整篩選條件，或先回首頁完成打卡。
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script>
+    const LIFF_ID = "2008602232-c53WoD3q";
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxyAKH_jKbP2KN_8royJLS4Le5u1w_MaNi_4RlwSzpvViyt3bIHBAKHHmCaT7E6tRlt/exec";
+    let allRecords = [];
+    let currentUserId = "";
+
+    function safeDate(value) {
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function formatDateTime(value) {
+      const date = safeDate(value);
+      if (!date) return value || '--';
+      return date.toLocaleString('zh-TW', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+    }
+
+    function getStatusClass(action) {
+      if (action && action.includes('外出')) return 'status-warning';
+      if (action && (action.includes('失敗') || action.includes('異常'))) return 'status-danger';
+      return 'status-success';
+    }
+
+    function getRangeText(value) {
+      if (value === true || value === 'true') return '範圍內';
+      if (value === false || value === 'false') return '範圍外';
+      return '--';
+    }
+
+    function normalizeRecord(record) {
+      return {
+        timestamp: record.timestamp || record.time || '',
+        name: record.name || '',
+        action: record.action || '',
+        distance: record.distance ?? '',
+        inRange: record.inRange,
+        accuracy: record.accuracy ?? '',
+        latitude: record.latitude ?? '',
+        longitude: record.longitude ?? ''
+      };
+    }
+
+    function renderSummary(records) {
+      document.getElementById('summaryTotal').textContent = records.length;
+      document.getElementById('summaryClockIn').textContent = records.filter(r => r.action === '已上班').length;
+      document.getElementById('summaryClockOut').textContent = records.filter(r => r.action === '已下班').length;
+      document.getElementById('summaryGoOut').textContent = records.filter(r => (r.action || '').includes('外出') || (r.action || '').includes('返回')).length;
+    }
+
+    function renderTable(records) {
+      const tbody = document.getElementById('recordTableBody');
+      const tableCard = document.getElementById('tableCard');
+      const emptyState = document.getElementById('emptyState');
+
+      if (!records.length) {
+        tbody.innerHTML = '';
+        tableCard.style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      tableCard.style.display = 'block';
+      emptyState.style.display = 'none';
+
+      tbody.innerHTML = records.map(record => {
+        const action = record.action || '--';
+        const distance = record.distance !== '' && record.distance !== undefined ? `${record.distance} m` : '--';
+        const accuracy = record.accuracy !== '' && record.accuracy !== undefined ? `± ${record.accuracy} m` : '--';
+        return `
+          <tr>
+            <td>${formatDateTime(record.timestamp)}</td>
+            <td>${record.name || '--'}</td>
+            <td><span class="status-tag ${getStatusClass(action)}">${action}</span></td>
+            <td>${distance}</td>
+            <td>${getRangeText(record.inRange)}</td>
+            <td>${accuracy}</td>
+            <td>${record.latitude || '--'}</td>
+            <td>${record.longitude || '--'}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function applyFilters() {
+      const actionValue = document.getElementById('actionFilter').value;
+      const rangeValue = document.getElementById('rangeFilter').value;
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+
+      const filtered = allRecords.filter(record => {
+        const actionMatch = !actionValue || record.action === actionValue;
+        const rangeMatch = !rangeValue || String(record.inRange) === rangeValue;
+
+        const recordDate = safeDate(record.timestamp);
+        let startMatch = true;
+        let endMatch = true;
+
+        if (startDate && recordDate) {
+          startMatch = recordDate >= new Date(`${startDate}T00:00:00`);
+        }
+
+        if (endDate && recordDate) {
+          endMatch = recordDate <= new Date(`${endDate}T23:59:59`);
+        }
+
+        return actionMatch && rangeMatch && startMatch && endMatch;
+      });
+
+      renderSummary(filtered);
+      renderTable(filtered);
+    }
+
+    async function initLiff() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return false;
+        }
+
+        const profile = await liff.getProfile();
+        currentUserId = profile.userId;
+        document.getElementById('currentUserName').value = profile.displayName || '目前使用者';
+        return true;
+      } catch (error) {
+        document.getElementById('currentUserName').value = 'LIFF 初始化失敗';
+        const tbody = document.getElementById('recordTableBody');
+        tbody.innerHTML = `<tr><td colspan="8" class="muted">LIFF 初始化失敗：${error.message}</td></tr>`;
+        return false;
+      }
+    }
+
+    async function fetchAttendanceRecords() {
+      const tbody = document.getElementById('recordTableBody');
+      tbody.innerHTML = '<tr><td colspan="8" class="muted">載入中...</td></tr>';
+
+      try {
+        if (!currentUserId) {
+          throw new Error('尚未取得使用者身分');
+        }
+
+        const response = await fetch(`${GAS_WEB_APP_URL}?action=myRecords&userId=${encodeURIComponent(currentUserId)}`);
+        const result = await response.json();
+
+        if (!result.ok || !Array.isArray(result.records)) {
+          throw new Error(result.message || '讀取失敗');
+        }
+
+        allRecords = result.records.map(normalizeRecord);
+        applyFilters();
+      } catch (error) {
+        renderSummary([]);
+        tbody.innerHTML = `<tr><td colspan="8" class="muted">讀取失敗：${error.message}</td></tr>`;
+      }
+    }
+
+    document.getElementById('filterBtn').addEventListener('click', applyFilters);
+    document.getElementById('refreshBtn').addEventListener('click', fetchAttendanceRecords);
+    document.getElementById('actionFilter').addEventListener('change', applyFilters);
+    document.getElementById('rangeFilter').addEventListener('change', applyFilters);
+    document.getElementById('startDate').addEventListener('change', applyFilters);
+    document.getElementById('endDate').addEventListener('change', applyFilters);
+
+    (async () => {
+      const ready = await initLiff();
+      if (ready) {
+        await fetchAttendanceRecords();
+      }
+    })();
+  </script>
+</body>
+</html>
