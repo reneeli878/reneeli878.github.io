@@ -395,6 +395,7 @@
             </div>
             <button class="btn btn-primary" id="filterBtn" type="button">套用篩選</button>
           </div>
+            </div>
         </div>
       </div>
     </section>
@@ -416,8 +417,8 @@
               <b id="summaryClockOut">0</b>
             </div>
             <div class="summary-item">
-              <small>外出相關</small>
-              <b id="summaryGoOut">0</b>
+              <small>本月總工時</small>
+              <b id="summaryWorkHours">0 小時</b>
             </div>
           </div>
         </div>
@@ -436,11 +437,12 @@
                   <th>動作</th>
                   <th>距離公司</th>
                   <th>範圍狀態</th>
+                  
                 </tr>
               </thead>
               <tbody id="recordTableBody">
                 <tr>
-                  <td colspan="8" class="muted">載入中...</td>
+                  <td colspan="5" class="muted">載入中...</td>
                 </tr>
               </tbody>
             </table>
@@ -509,7 +511,37 @@
       document.getElementById('summaryTotal').textContent = records.length;
       document.getElementById('summaryClockIn').textContent = records.filter(r => r.action === '已上班').length;
       document.getElementById('summaryClockOut').textContent = records.filter(r => r.action === '已下班').length;
-      document.getElementById('summaryGoOut').textContent = records.filter(r => (r.action || '').includes('外出') || (r.action || '').includes('返回')).length;
+
+      const workHours = calculateMonthlyWorkHours(records);
+      document.getElementById('summaryWorkHours').textContent = `${workHours} 小時`;
+
+      
+    }
+
+    function calculateMonthlyWorkHours(records) {
+      const sorted = [...records].sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+      let totalMs = 0;
+      let clockIn = null;
+
+      sorted.forEach(record => {
+        const d = safeDate(record.timestamp);
+        if (!d) return;
+
+        if (record.action === '已上班') {
+          clockIn = d;
+        }
+
+        if (record.action === '已下班' && clockIn) {
+          let diff = (d - clockIn);
+          if (diff > 6 * 60 * 60 * 1000) {
+            diff -= 60 * 60 * 1000;
+          }
+          totalMs += diff;
+          clockIn = null;
+        }
+      });
+
+      return (totalMs / 1000 / 60 / 60).toFixed(1);
     }
 
     function renderTable(records) {
@@ -530,7 +562,7 @@
       tbody.innerHTML = records.map(record => {
         const action = record.action || '--';
         const distance = record.distance !== '' && record.distance !== undefined ? `${record.distance} m` : '--';
-        const accuracy = record.accuracy !== '' && record.accuracy !== undefined ? `± ${record.accuracy} m` : '--';
+        
         return `
           <tr>
             <td>${formatDateTime(record.timestamp)}</td>
@@ -538,9 +570,6 @@
             <td><span class="status-tag ${getStatusClass(action)}">${action}</span></td>
             <td>${distance}</td>
             <td>${getRangeText(record.inRange)}</td>
-            <td>${accuracy}</td>
-            <td>${record.latitude || '--'}</td>
-            <td>${record.longitude || '--'}</td>
           </tr>
         `;
       }).join('');
@@ -586,10 +615,10 @@
 
         const profile = await liff.getProfile();
         currentUserId = profile.userId;
-        document.getElementById('currentUserName').value = profile.displayName || '目前使用者';
+        // 已移除目前查詢對象欄位
         return true;
       } catch (error) {
-        document.getElementById('currentUserName').value = 'LIFF 初始化失敗';
+        // 已移除目前查詢對象欄位
         const tbody = document.getElementById('recordTableBody');
         tbody.innerHTML = `<tr><td colspan="8" class="muted">LIFF 初始化失敗：${error.message}</td></tr>`;
         return false;
@@ -616,7 +645,7 @@
         applyFilters();
       } catch (error) {
         renderSummary([]);
-        tbody.innerHTML = `<tr><td colspan="8" class="muted">讀取失敗：${error.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="muted">讀取失敗：${error.message}</td></tr>`;
       }
     }
 
