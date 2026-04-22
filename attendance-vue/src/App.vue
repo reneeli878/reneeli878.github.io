@@ -26,7 +26,7 @@
               v-for="item in actionButtons"
               :key="item.key"
               @click="handleAction(item.key)"
-              :disabled="isSubmitting"
+              :disabled="isSubmitting || !isActionAllowed(item.key)"
               class="group rounded-[22px] border border-white/70 bg-white/88 px-3 py-4 text-center shadow-[0_14px_26px_rgba(25,55,90,0.07)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_20px_34px_rgba(25,55,90,0.1)] disabled:cursor-not-allowed disabled:opacity-60 max-sm:min-h-[106px]"
             >
               <div class="mx-auto mb-2 grid h-11 w-11 place-items-center rounded-2xl bg-[linear-gradient(135deg,rgba(60,130,191,0.14),rgba(60,130,191,0.06))] text-[18px] text-[rgb(31,77,117)] transition group-hover:scale-105">
