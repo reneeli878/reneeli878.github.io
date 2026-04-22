@@ -88,7 +88,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
-const DEV_MODE = true
+const DEV_MODE = false
 const LIFF_ID = '2008602232-c53WoD3q'
 const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxSw2YDB2z7BDj_ykkm_qlgwRiyPQxJqX5IpgKuVRBppL9urxMOR38oq_nnSzPlR6LL/exec'
 
