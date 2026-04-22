@@ -218,6 +218,7 @@ const recentRecords = ref([
 ])
 
 const latestClockInTime = ref(null)
+const latestAction = ref('未打卡')
 
 function formatRecordDate(dateString) {
   const date = new Date(dateString)
@@ -257,7 +258,7 @@ function calculateDistanceMeters(lat1, lng1, lat2, lng2) {
 }
 
 function updateWorkingDuration() {
-  if (!latestClockInTime.value) return
+  if (!latestClockInTime.value || latestAction.value !== '已上班') return
 
   const start = new Date(latestClockInTime.value)
   if (Number.isNaN(start.getTime())) return
@@ -274,7 +275,35 @@ function updateWorkingDuration() {
     status: `已上班 ${hours} 小時 ${mins} 分`
   }
 }
+function isActionAllowed(actionKey) {
+  const current = latestAction.value
 
+  if (current === '未打卡') {
+    return actionKey === 'clockin'
+  }
+
+  if (current === '已上班') {
+    return actionKey === 'clockout' || actionKey === 'goout'
+  }
+
+  if (current === '外出中') {
+    return actionKey === 'back'
+  }
+
+  if (current === '返回公司') {
+    return actionKey === 'clockout' || actionKey === 'goout'
+  }
+
+  if (current === '已下班') {
+    return false
+  }
+
+  return true
+}
+
+function getActionSubtext(item) {
+  return isActionAllowed(item.key) ? item.sub : '目前不可用'
+}
 async function initLiff() {
   try {
     if (!window.liff) throw new Error('LIFF SDK 未載入')
@@ -326,26 +355,28 @@ async function fetchRecentRecords() {
     }
 
     if (result.records.length === 0) {
-      recentRecords.value = [
-        {
-          id: 1,
-          time: '目前沒有打卡紀錄',
-          action: '空白',
-          name: '完成第一筆打卡後，這裡會自動更新',
-          distance: '--',
-          badgeClass: 'bg-amber-100 text-amber-700'
-        }
-      ]
-      latestClockInTime.value = null
-      dashboard.value = {
-        ...dashboard.value,
-        status: '未打卡',
-        distance: '-- m'
-      }
-      return
+  recentRecords.value = [
+    {
+      id: 1,
+      time: '目前沒有打卡紀錄',
+      action: '空白',
+      name: '完成第一筆打卡後，這裡會自動更新',
+      distance: '--',
+      badgeClass: 'bg-amber-100 text-amber-700'
     }
+  ]
+  latestClockInTime.value = null
+  latestAction.value = '未打卡'
+  dashboard.value = {
+    ...dashboard.value,
+    status: '未打卡',
+    distance: '-- m'
+  }
+  return
+}
 
     const latestRecord = result.records[0]
+    latestAction.value = latestRecord.action || '未打卡'
 
     if (latestRecord.action === '已上班') {
       latestClockInTime.value = latestRecord.timestamp
@@ -463,20 +494,29 @@ async function updateGpsDisplay(position, actionLabel) {
     const result = await sendAttendanceToGAS(payload)
 
     if (!result.ok) {
-      throw new Error(result.message || '寫入失敗')
-    }
+  throw new Error(result.message || '寫入失敗')
+}
 
-    gps.value = {
-      ...gps.value,
-      message: `${actionLabel} 打卡成功 ✅`
-    }
+latestAction.value = actionLabel
 
-    dashboard.value = {
-      ...dashboard.value,
-      status: actionLabel
-    }
+if (actionLabel === '已上班') {
+  latestClockInTime.value = new Date().toISOString()
+} else {
+  latestClockInTime.value = null
+}
 
-    await fetchRecentRecords()
+gpsStatus.value = 'success'
+gps.value = {
+  ...gps.value,
+  message: `${actionLabel} 打卡成功 ✅`
+}
+
+dashboard.value = {
+  ...dashboard.value,
+  status: actionLabel
+}
+
+await fetchRecentRecords()
   } catch (error) {
     console.error('送出打卡失敗:', error)
     gps.value = {
@@ -489,6 +529,10 @@ async function updateGpsDisplay(position, actionLabel) {
 }
 
 function handleAction(type) {
+  if (!isActionAllowed(type) || isSubmitting.value) {
+    return
+  }
+
   const actionMap = {
     clockin: '已上班',
     clockout: '已下班',
@@ -497,6 +541,7 @@ function handleAction(type) {
   }
 
   if (!navigator.geolocation) {
+    gpsStatus.value = 'danger'
     gps.value = {
       ...gps.value,
       range: '不支援',
@@ -506,6 +551,7 @@ function handleAction(type) {
   }
 
   isSubmitting.value = true
+  gpsStatus.value = 'idle'
   gps.value = {
     ...gps.value,
     range: '定位中',
