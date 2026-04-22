@@ -11,10 +11,6 @@
             <small class="text-xs font-bold tracking-[0.03em] text-slate-500 max-sm:hidden">Attendance Portal</small>
           </div>
         </div>
-
-        <button class="inline-flex min-h-10 items-center justify-center rounded-full bg-gradient-to-br from-[rgb(60,130,191)] to-[rgb(45,101,149)] px-5 text-sm font-extrabold text-white shadow-[0_10px_20px_rgba(60,130,191,0.24)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_26px_rgba(60,130,191,0.28)] max-sm:min-h-[38px] max-sm:px-4 max-sm:text-[13px]">
-          立即打卡
-        </button>
       </div>
     </header>
 
@@ -27,13 +23,17 @@
               :key="item.key"
               @click="handleAction(item.key)"
               :disabled="isSubmitting || !isActionAllowed(item.key)"
-              class="group rounded-[22px] border border-white/70 bg-white/88 px-3 py-4 text-center shadow-[0_14px_26px_rgba(25,55,90,0.07)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_20px_34px_rgba(25,55,90,0.1)] disabled:cursor-not-allowed disabled:opacity-60 max-sm:min-h-[106px]"
+              class="group rounded-[22px] border border-white/70 bg-white/88 px-3 py-4 text-center shadow-[0_14px_26px_rgba(25,55,90,0.07)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_20px_34px_rgba(25,55,90,0.1)] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0 disabled:hover:shadow-[0_14px_26px_rgba(25,55,90,0.07)] max-sm:min-h-[106px]"
             >
               <div class="mx-auto mb-2 grid h-11 w-11 place-items-center rounded-2xl bg-[linear-gradient(135deg,rgba(60,130,191,0.14),rgba(60,130,191,0.06))] text-[18px] text-[rgb(31,77,117)] transition group-hover:scale-105">
                 {{ item.icon }}
               </div>
-              <h4 class="text-[15px] font-bold text-slate-800 max-sm:text-[14px]">{{ item.label }}</h4>
-              <span class="mt-1 block text-xs text-slate-500">{{ isSubmitting ? '送出中...' : item.sub }}</span>
+              <h4 class="text-[15px] font-bold text-slate-800 max-sm:text-[14px]">
+                {{ item.label }}
+              </h4>
+              <span class="mt-1 block text-xs text-slate-500">
+                {{ isSubmitting ? '送出中...' : getActionSubtext(item) }}
+              </span>
             </button>
           </div>
 
@@ -51,8 +51,12 @@
                   class="flex items-start justify-between gap-3 rounded-2xl border border-slate-200/90 bg-[linear-gradient(180deg,#fcfdff_0%,#f8fbfe_100%)] px-3 py-3 transition hover:border-slate-300 max-sm:gap-2"
                 >
                   <div class="min-w-0">
-                    <strong class="block text-[14px] font-bold text-slate-800 max-sm:text-[13px]">{{ record.time }} {{ record.action }}</strong>
-                    <span class="mt-1 block text-xs leading-5 text-slate-500">{{ record.name }} ・ 距離公司 {{ record.distance }}</span>
+                    <strong class="block text-[14px] font-bold text-slate-800 max-sm:text-[13px]">
+                      {{ record.time }} {{ record.action }}
+                    </strong>
+                    <span class="mt-1 block text-xs leading-5 text-slate-500">
+                      {{ record.name }} ・ 距離公司 {{ record.distance }}
+                    </span>
                   </div>
                   <div class="shrink-0 rounded-full px-2.5 py-1 text-xs font-extrabold" :class="record.badgeClass">
                     {{ record.action }}
@@ -100,7 +104,7 @@
               <div class="mt-3 rounded-[18px] border border-slate-200/90 bg-[linear-gradient(180deg,#fcfdff_0%,#f8fbfe_100%)] p-3">
                 <div class="mb-2 flex items-center justify-between gap-3">
                   <strong class="text-[14px] font-bold text-slate-800">GPS 打卡測試</strong>
-                  <span class="inline-block h-2.5 w-2.5 rounded-full bg-amber-500 shadow-[0_0_0_4px_rgba(245,158,11,0.12)]"></span>
+                  <span class="inline-block h-2.5 w-2.5 rounded-full" :class="gpsDotClass"></span>
                 </div>
 
                 <div class="grid grid-cols-2 gap-2">
@@ -177,6 +181,7 @@ const quickLinks = [
 
 const now = ref(new Date())
 const isSubmitting = ref(false)
+const gpsStatus = ref('idle')
 let timer = null
 let workTimer = null
 
@@ -186,6 +191,12 @@ const dateText = computed(() => {
   const date = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
   const week = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'][d.getDay()]
   return `${date} ${week}`
+})
+
+const gpsDotClass = computed(() => {
+  if (gpsStatus.value === 'success') return 'bg-green-500 shadow-[0_0_0_4px_rgba(34,197,94,0.12)]'
+  if (gpsStatus.value === 'danger') return 'bg-red-500 shadow-[0_0_0_4px_rgba(239,68,68,0.12)]'
+  return 'bg-amber-500 shadow-[0_0_0_4px_rgba(245,158,11,0.12)]'
 })
 
 const user = ref({
@@ -275,28 +286,15 @@ function updateWorkingDuration() {
     status: `已上班 ${hours} 小時 ${mins} 分`
   }
 }
+
 function isActionAllowed(actionKey) {
   const current = latestAction.value
 
-  if (current === '未打卡') {
-    return actionKey === 'clockin'
-  }
-
-  if (current === '已上班') {
-    return actionKey === 'clockout' || actionKey === 'goout'
-  }
-
-  if (current === '外出中') {
-    return actionKey === 'back'
-  }
-
-  if (current === '返回公司') {
-    return actionKey === 'clockout' || actionKey === 'goout'
-  }
-
-  if (current === '已下班') {
-    return false
-  }
+  if (current === '未打卡') return actionKey === 'clockin'
+  if (current === '已上班') return actionKey === 'clockout' || actionKey === 'goout'
+  if (current === '外出中') return actionKey === 'back'
+  if (current === '返回公司') return actionKey === 'clockout' || actionKey === 'goout'
+  if (current === '已下班') return false
 
   return true
 }
@@ -304,6 +302,7 @@ function isActionAllowed(actionKey) {
 function getActionSubtext(item) {
   return isActionAllowed(item.key) ? item.sub : '目前不可用'
 }
+
 async function initLiff() {
   try {
     if (!window.liff) throw new Error('LIFF SDK 未載入')
@@ -326,6 +325,7 @@ async function initLiff() {
     }
   } catch (error) {
     console.error('LIFF 初始化失敗:', error)
+    gpsStatus.value = 'danger'
     gps.value = {
       ...gps.value,
       message: `LIFF 初始化失敗：${error.message}`
@@ -363,25 +363,25 @@ async function fetchRecentRecords() {
     }
 
     if (result.records.length === 0) {
-  recentRecords.value = [
-    {
-      id: 1,
-      time: '目前沒有打卡紀錄',
-      action: '空白',
-      name: '完成第一筆打卡後，這裡會自動更新',
-      distance: '--',
-      badgeClass: 'bg-amber-100 text-amber-700'
+      recentRecords.value = [
+        {
+          id: 1,
+          time: '目前沒有打卡紀錄',
+          action: '空白',
+          name: '完成第一筆打卡後，這裡會自動更新',
+          distance: '--',
+          badgeClass: 'bg-amber-100 text-amber-700'
+        }
+      ]
+      latestClockInTime.value = null
+      latestAction.value = '未打卡'
+      dashboard.value = {
+        ...dashboard.value,
+        status: '未打卡',
+        distance: '-- m'
+      }
+      return
     }
-  ]
-  latestClockInTime.value = null
-  latestAction.value = '未打卡'
-  dashboard.value = {
-    ...dashboard.value,
-    status: '未打卡',
-    distance: '-- m'
-  }
-  return
-}
 
     const latestRecord = result.records[0]
     latestAction.value = latestRecord.action || '未打卡'
@@ -511,6 +511,13 @@ async function updateGpsDisplay(position, actionLabel) {
       throw new Error(result.message || '寫入失敗')
     }
 
+    latestAction.value = actionLabel
+    if (actionLabel === '已上班') {
+      latestClockInTime.value = new Date().toISOString()
+    } else {
+      latestClockInTime.value = null
+    }
+
     gpsStatus.value = 'success'
     gps.value = {
       ...gps.value,
@@ -525,7 +532,6 @@ async function updateGpsDisplay(position, actionLabel) {
     await fetchRecentRecords()
   } catch (error) {
     console.error('送出打卡失敗:', error)
-
     gpsStatus.value = 'danger'
     gps.value = {
       ...gps.value,
@@ -539,7 +545,7 @@ async function updateGpsDisplay(position, actionLabel) {
 }
 
 function handleAction(type) {
-  if (isSubmitting.value) return
+  if (!isActionAllowed(type) || isSubmitting.value) return
 
   const actionMap = {
     clockin: '已上班',
