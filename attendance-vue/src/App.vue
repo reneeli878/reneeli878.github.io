@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-[radial-gradient(circle_at_top_right,rgba(60,130,191,0.12),transparent_28%),linear-gradient(180deg,#f8fbfe_0%,#f3f8fc_60%,#eef5fb_100%)] text-slate-800">
-    <header class="sticky top-0 z-50 border-b border-[rgba(219,231,241,0.86)] bg-white/80 backdrop-blur-[14px]">
+    <header class="sticky top-0 z-50 border-b border-[rgba(219,231,241,0.86)] bg-white/82 backdrop-blur-[14px]">
       <div class="mx-auto flex min-h-[66px] w-[min(1120px,calc(100%-28px))] items-center justify-between gap-3 max-[920px]:w-[min(100%-22px,1120px)] max-sm:min-h-[60px] max-sm:w-[min(100%-16px,1120px)]">
         <div class="flex items-center gap-2.5 font-extrabold">
           <div class="grid h-10 w-[70px] place-items-center rounded-[14px] bg-gradient-to-br from-[rgb(60,130,191)] to-[rgb(31,77,117)] text-white shadow-[0_10px_20px_rgba(60,130,191,0.22)] max-sm:h-9 max-sm:w-9 max-sm:rounded-xl">
@@ -12,11 +12,15 @@
             <small class="text-[0.78rem] font-bold text-slate-500 max-sm:hidden">Attendance Portal</small>
           </div>
         </div>
+
+        <div class="hidden items-center gap-2 text-xs font-bold text-slate-500 sm:flex">
+          <span class="rounded-full bg-[rgba(60,130,191,0.1)] px-3 py-1.5 text-[rgb(31,77,117)]">開啟 GPS 打卡</span>
+        </div>
       </div>
     </header>
 
     <main>
-      <section class="px-0 py-4 max-sm:py-2.5">
+      <section class="px-0 py-4 max-sm:py-3">
         <div class="mx-auto w-[min(1120px,calc(100%-28px))] max-[920px]:w-[min(100%-22px,1120px)] max-sm:w-[min(100%-16px,1120px)]">
           <div class="mb-3 grid grid-cols-4 gap-2.5 max-[920px]:grid-cols-2 max-sm:mb-2.5 max-sm:grid-cols-2 max-sm:gap-2.5">
             <button
@@ -24,43 +28,21 @@
               :key="item.key"
               @click="handleAction(item.key)"
               :disabled="isSubmitting || !isActionAllowed(item.key)"
-              class="rounded-[18px] border border-[rgba(219,231,241,0.96)] bg-white/90 px-2.5 py-3.5 text-center shadow-[0_12px_24px_rgba(25,55,90,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_26px_rgba(25,55,90,0.08)] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0 max-sm:min-h-[104px] max-sm:rounded-[18px] max-sm:px-2.5 max-sm:py-4"
+              class="group relative overflow-hidden rounded-[18px] border border-[rgba(219,231,241,0.96)] bg-white/95 px-2.5 py-3.5 text-center shadow-[0_12px_24px_rgba(25,55,90,0.08)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_26px_rgba(25,55,90,0.08)] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0 max-sm:min-h-[108px] max-sm:rounded-[18px] max-sm:px-2.5 max-sm:py-4 active:scale-[0.985]"
             >
-              <div class="mx-auto mb-2 grid h-10 w-10 place-items-center rounded-xl bg-[rgba(60,130,191,0.1)] text-base text-[rgb(31,77,117)] max-sm:h-[42px] max-sm:w-[42px] max-sm:text-base">
+              <div class="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,rgba(60,130,191,0.45),rgba(60,130,191,0))]"></div>
+              <div class="mx-auto mb-2 grid h-11 w-11 place-items-center rounded-xl bg-[rgba(60,130,191,0.1)] text-base text-[rgb(31,77,117)] ring-1 ring-[rgba(60,130,191,0.08)] transition group-hover:scale-105 max-sm:h-[42px] max-sm:w-[42px] max-sm:text-base">
                 {{ item.icon }}
               </div>
-              <h4 class="m-0 text-[0.92rem] font-bold text-center max-sm:text-[0.94rem]">{{ item.label }}</h4>
+              <h4 class="m-0 text-[0.94rem] font-bold text-center text-slate-800 max-sm:text-[0.94rem]">{{ item.label }}</h4>
               <span class="mt-1.5 block text-center text-[0.8rem] leading-[1.4] text-slate-500 max-sm:text-[0.78rem]">
                 {{ isSubmitting ? '送出中...' : getActionSubtext(item) }}
               </span>
             </button>
           </div>
 
-          <div class="grid grid-cols-[0.95fr_1.05fr] items-start gap-3 max-[920px]:grid-cols-1 max-sm:flex max-sm:flex-col max-sm:gap-2.5">
-            <section class="rounded-[20px] border border-[rgba(219,231,241,0.96)] bg-white/90 p-4 shadow-[0_12px_24px_rgba(25,55,90,0.08)] max-sm:order-2 max-sm:rounded-[18px] max-sm:p-3.5">
-              <div class="mb-2.5 flex items-center justify-between gap-2.5">
-                <h3 class="m-0 text-[0.98rem] font-bold">打卡紀錄（最近 5 筆）</h3>
-                <small class="text-xs text-slate-500">即時資料</small>
-              </div>
-
-              <div class="grid gap-2" id="recordListVue">
-                <div
-                  v-for="record in recentRecords"
-                  :key="record.id"
-                  class="flex items-start justify-between gap-2.5 rounded-xl border border-slate-200 bg-[#fbfdff] px-3 py-2.5 max-sm:items-start max-sm:px-2.5 max-sm:py-2.5"
-                >
-                  <div class="min-w-0">
-                    <strong class="mb-0.5 block text-[0.88rem] font-bold">{{ record.time }} {{ record.action }}</strong>
-                    <span class="text-[0.8rem] leading-[1.45] text-slate-500 max-sm:text-[0.78rem]">{{ record.name }} ・ 距離公司 {{ record.distance }}</span>
-                  </div>
-                  <div class="min-w-[28px] whitespace-nowrap rounded-full px-[10px] py-[6px] text-center text-[0.75rem] font-extrabold" :class="record.badgeClass">
-                    {{ record.action }}
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <aside class="rounded-[20px] border border-[rgba(219,231,241,0.96)] bg-white/90 p-4 shadow-[0_12px_24px_rgba(25,55,90,0.08)] max-sm:order-1 max-sm:rounded-[18px] max-sm:p-3.5">
+          <div class="grid grid-cols-[0.95fr_1.05fr] items-start gap-3 max-[920px]:grid-cols-1 max-sm:flex max-sm:flex-col max-sm:gap-3">
+            <aside class="w-full rounded-[20px] border border-[rgba(219,231,241,0.96)] bg-white/92 p-4 shadow-[0_12px_24px_rgba(25,55,90,0.08)] max-sm:order-1 max-sm:w-full max-sm:rounded-[18px] max-sm:p-3.5">
               <div class="mb-2.5 flex items-center justify-between gap-2.5">
                 <h2 class="m-0 text-[0.98rem] font-bold">今日出勤儀表板</h2>
                 <div class="min-w-[28px] rounded-full px-[10px] py-[6px] text-[0.95rem] font-extrabold leading-none" :class="statusPillClass">●</div>
@@ -68,39 +50,39 @@
 
               <div class="rounded-[18px] border border-[rgba(60,130,191,0.12)] bg-[linear-gradient(135deg,rgba(60,130,191,0.11),rgba(60,130,191,0.03))] p-3.5">
                 <div class="text-[0.8rem] leading-[1.45] text-slate-500 max-sm:text-[0.78rem]">目前時間</div>
-                <div class="text-[clamp(1.6rem,4vw,2.2rem)] font-black leading-none tracking-[-0.05em] text-[rgb(31,77,117)] max-sm:text-[2rem]">{{ clock }}</div>
+                <div class="text-[clamp(1.7rem,4vw,2.25rem)] font-black leading-none tracking-[-0.05em] text-[rgb(31,77,117)] max-sm:text-[2rem]">{{ clock }}</div>
                 <div class="mt-1.5 text-[0.8rem] leading-[1.45] text-slate-500 max-sm:text-[0.78rem]">{{ dateText }}</div>
               </div>
 
               <div class="mt-2.5 grid grid-cols-[auto_1fr] items-center gap-2.5 rounded-[14px] border border-slate-200 bg-[#fbfdff] p-3 max-sm:p-2.5">
-                <div class="grid h-[42px] w-[42px] place-items-center rounded-xl bg-gradient-to-br from-[rgb(60,130,191)] to-[rgb(31,77,117)] text-base font-black text-white">
+                <div class="grid h-[42px] w-[42px] place-items-center rounded-xl bg-gradient-to-br from-[rgb(60,130,191)] to-[rgb(31,77,117)] text-base font-black text-white shadow-[0_8px_16px_rgba(60,130,191,0.2)]">
                   {{ user.avatar }}
                 </div>
                 <div>
-                  <strong class="mb-0.5 block text-[0.88rem] font-bold">{{ user.name }}</strong>
+                  <strong class="mb-0.5 block text-[0.88rem] font-bold text-slate-800">{{ user.name }}</strong>
                   <span class="block text-[0.8rem] leading-[1.45] text-slate-500 max-sm:text-[0.78rem]">{{ user.dept }}</span>
                   <span class="block text-[0.8rem] leading-[1.45] text-slate-500 max-sm:hidden">{{ user.lineId }}</span>
                 </div>
               </div>
 
               <div class="mt-2.5 grid grid-cols-2 gap-2.5 max-sm:grid-cols-1 max-sm:gap-2">
-                <div class="rounded-xl border border-slate-200 bg-white px-2 py-2.5 text-center max-sm:px-3 max-sm:text-left">
-                  <b class="mb-1 block text-[0.92rem] text-[rgb(31,77,117)] max-sm:text-base">{{ dashboard.status }}</b>
+                <div class="rounded-xl border border-slate-200 bg-white px-3 py-3 text-center shadow-[0_4px_10px_rgba(25,55,90,0.03)] max-sm:text-left">
+                  <b class="mb-1 block text-[0.95rem] text-[rgb(31,77,117)] max-sm:text-base">{{ dashboard.status }}</b>
                   <span class="text-[0.75rem] font-bold text-slate-500">目前狀態</span>
                 </div>
-                <div class="rounded-xl border border-slate-200 bg-white px-2 py-2.5 text-center max-sm:px-3 max-sm:text-left">
-                  <b class="mb-1 block text-[0.92rem] text-[rgb(31,77,117)] max-sm:text-base">{{ dashboard.distance }}</b>
+                <div class="rounded-xl border border-slate-200 bg-white px-3 py-3 text-center shadow-[0_4px_10px_rgba(25,55,90,0.03)] max-sm:text-left">
+                  <b class="mb-1 block text-[0.95rem] text-[rgb(31,77,117)] max-sm:text-base">{{ dashboard.distance }}</b>
                   <span class="text-[0.75rem] font-bold text-slate-500">距離公司</span>
                 </div>
               </div>
 
               <div class="mt-2.5 grid grid-cols-2 gap-2.5 max-sm:grid-cols-1 max-sm:gap-2">
-                <div class="rounded-xl border border-slate-200 bg-white px-2 py-2.5 text-center max-sm:px-3 max-sm:text-left">
-                  <b class="mb-1 block text-[0.92rem] text-[rgb(31,77,117)] max-sm:text-base">{{ dashboard.firstClockIn }}</b>
+                <div class="rounded-xl border border-slate-200 bg-white px-3 py-3 text-center shadow-[0_4px_10px_rgba(25,55,90,0.03)] max-sm:text-left">
+                  <b class="mb-1 block text-[0.95rem] text-[rgb(31,77,117)] max-sm:text-base">{{ dashboard.firstClockIn }}</b>
                   <span class="text-[0.75rem] font-bold text-slate-500">今日上班時間</span>
                 </div>
-                <div class="rounded-xl border border-slate-200 bg-white px-2 py-2.5 text-center max-sm:px-3 max-sm:text-left">
-                  <b class="mb-1 block text-[0.92rem] text-[rgb(31,77,117)] max-sm:text-base">{{ dashboard.lastUpdate }}</b>
+                <div class="rounded-xl border border-slate-200 bg-white px-3 py-3 text-center shadow-[0_4px_10px_rgba(25,55,90,0.03)] max-sm:text-left">
+                  <b class="mb-1 block text-[0.95rem] text-[rgb(31,77,117)] max-sm:text-base">{{ dashboard.lastUpdate }}</b>
                   <span class="text-[0.75rem] font-bold text-slate-500">最後更新</span>
                 </div>
               </div>
@@ -108,32 +90,55 @@
               <div class="mt-2.5 rounded-[14px] border border-slate-200 bg-[#fbfdff] p-3 max-sm:p-2.5">
                 <div class="mb-2 flex items-center justify-between gap-2.5">
                   <strong class="text-[0.88rem] font-bold">GPS 打卡測試</strong>
-                  <span class="inline-block h-2.5 w-2.5 rounded-full" :class="gpsDotClass"></span>
+                  <span class="inline-block h-2.5 w-2.5 rounded-full transition-all duration-300" :class="gpsDotClass"></span>
                 </div>
                 <div class="mt-2 grid grid-cols-2 gap-2">
-                  <div class="rounded-[10px] border border-slate-200 bg-white p-2">
+                  <div class="rounded-[10px] border border-slate-200 bg-white p-2.5">
                     <small class="mb-1 block text-[0.72rem] text-slate-500">精確度</small>
                     <b class="block break-all text-[0.8rem] text-[rgb(31,77,117)]">{{ gps.accuracy }}</b>
                   </div>
-                  <div class="rounded-[10px] border border-slate-200 bg-white p-2">
+                  <div class="rounded-[10px] border border-slate-200 bg-white p-2.5">
                     <small class="mb-1 block text-[0.72rem] text-slate-500">範圍判定</small>
                     <b class="block break-all text-[0.8rem] text-[rgb(31,77,117)]">{{ gps.range }}</b>
                   </div>
                 </div>
-                <div class="mt-2 text-[0.8rem] leading-[1.45] text-slate-500 max-sm:text-[0.78rem]">{{ gps.message }}</div>
+                <div class="mt-2 text-[0.8rem] leading-[1.5] text-slate-500 max-sm:text-[0.78rem]">{{ gps.message }}</div>
               </div>
 
               <div v-if="DEV_MODE" class="mt-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700">
                 開發模式已開啟，部分資料以假資料預覽。
               </div>
             </aside>
+
+            <section class="w-full rounded-[20px] border border-[rgba(219,231,241,0.96)] bg-white/92 p-4 shadow-[0_12px_24px_rgba(25,55,90,0.08)] max-sm:order-2 max-sm:w-full max-sm:rounded-[18px] max-sm:p-3.5">
+              <div class="mb-2.5 flex items-center justify-between gap-2.5">
+                <h3 class="m-0 text-[0.98rem] font-bold">打卡紀錄（最近 5 筆）</h3>
+                <small class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-500">即時資料</small>
+              </div>
+
+              <div class="grid gap-2" id="recordListVue">
+                <div
+                  v-for="record in recentRecords"
+                  :key="record.id"
+                  class="flex items-start justify-between gap-2.5 rounded-xl border border-slate-200 bg-[#fbfdff] px-3 py-3 transition hover:border-slate-300 max-sm:items-start max-sm:px-2.5"
+                >
+                  <div class="min-w-0 flex-1">
+                    <strong class="mb-0.5 block text-[0.9rem] font-bold text-slate-800">{{ record.time }} {{ record.action }}</strong>
+                    <span class="text-[0.8rem] leading-[1.55] text-slate-500 max-sm:text-[0.78rem]">{{ record.name }} ・ 距離公司 {{ record.distance }}</span>
+                  </div>
+                  <div class="min-w-[72px] whitespace-nowrap rounded-full px-[10px] py-[6px] text-center text-[0.75rem] font-extrabold shadow-sm" :class="record.badgeClass">
+                    {{ record.action }}
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
       </section>
 
       <section class="pb-[18px]">
         <div class="mx-auto mt-3 w-[min(1120px,calc(100%-28px))] max-[920px]:w-[min(100%-22px,1120px)] max-sm:mt-2.5 max-sm:w-[min(100%-16px,1120px)]">
-          <section class="rounded-[20px] border border-[rgba(219,231,241,0.96)] bg-white/90 p-4 shadow-[0_12px_24px_rgba(25,55,90,0.08)] max-sm:rounded-[18px] max-sm:p-3.5">
+          <section class="w-full rounded-[20px] border border-[rgba(219,231,241,0.96)] bg-white/92 p-4 shadow-[0_12px_24px_rgba(25,55,90,0.08)] max-sm:rounded-[18px] max-sm:p-3.5">
             <div class="mb-2.5 flex items-center justify-between gap-2.5">
               <h3 class="m-0 text-[0.98rem] font-bold">其他功能</h3>
             </div>
@@ -143,12 +148,12 @@
                 v-for="item in quickLinks"
                 :key="item.title"
                 :href="item.href"
-                class="rounded-[20px] border border-[rgba(219,231,241,0.96)] bg-white/90 p-4 text-center shadow-[0_12px_24px_rgba(25,55,90,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_26px_rgba(25,55,90,0.08)] max-sm:min-h-[110px] max-sm:p-3.5"
+                class="rounded-[20px] border border-[rgba(219,231,241,0.96)] bg-white/92 p-4 text-center shadow-[0_12px_24px_rgba(25,55,90,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_26px_rgba(25,55,90,0.08)] max-sm:min-h-[110px] max-sm:p-3.5"
               >
-                <div class="mx-auto mb-2 grid h-10 w-10 place-items-center rounded-xl bg-[rgba(60,130,191,0.1)] text-base text-[rgb(31,77,117)] max-sm:h-[42px] max-sm:w-[42px]">
+                <div class="mx-auto mb-2 grid h-10 w-10 place-items-center rounded-xl bg-[rgba(60,130,191,0.1)] text-base text-[rgb(31,77,117)] ring-1 ring-[rgba(60,130,191,0.08)] max-sm:h-[42px] max-sm:w-[42px]">
                   {{ item.icon }}
                 </div>
-                <h3 class="m-0 text-[0.92rem] font-bold text-center max-sm:text-[0.94rem]">{{ item.title }}</h3>
+                <h3 class="m-0 text-[0.92rem] font-bold text-center text-slate-800 max-sm:text-[0.94rem]">{{ item.title }}</h3>
                 <p class="mt-1.5 text-center text-[0.8rem] leading-[1.4] text-slate-500 max-sm:text-[0.78rem]">{{ item.desc }}</p>
               </a>
             </div>
