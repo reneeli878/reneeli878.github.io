@@ -70,7 +70,7 @@
                 <span class="text-[0.75rem] font-bold text-slate-500">目前狀態</span>
               </div>
 
-              
+
 
               <div class="mt-2.5 rounded-[14px] border border-slate-200 bg-[#fbfdff] p-3 max-sm:p-2.5">
                 <div class="mb-2 flex items-center justify-between gap-2.5">
@@ -151,7 +151,7 @@ import { RouterLink } from 'vue-router'
 const recordsLoaded = ref(false)
 const DEV_MODE = false
 const LIFF_ID = '2008602232-c53WoD3q'
-const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwv3gEiBMZ2YmpIEIuL0v_bWTPSVWiN64g-GbGbvKQD5Xxh1D99jqUnG4Ka4Z1yT7d9/exec'
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwgC196q1EWvi29XOukqJ9XwFhwCHzudsjwJ7GknhhQnq6kEMs-i_09XRszDPku0Lrx/exec'
 
 
 const OFFICE_LOCATION = {
