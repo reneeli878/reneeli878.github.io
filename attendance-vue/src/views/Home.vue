@@ -149,7 +149,7 @@ import { RouterLink } from 'vue-router'
 
 const DEV_MODE = false
 const LIFF_ID = '2008602232-c53WoD3q'
-const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxX0mNlGEMo8IPgPpaivGWGof1qF2fNsdZrSvrFn7aHNZpB2Io4RlK_cRj78q4Jr2Bx/exec'
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx52Kxl53cTZuXMVg4B8Q_DIzurrHrMAzZfZBXl5jIk_Gexe6eRDnYcPR3JoVWQ_wO8/exec'
 
 
 const OFFICE_LOCATION = {
@@ -376,20 +376,14 @@ async function initLiff() {
 }
 
 async function sendAttendanceToGAS(payload) {
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 15000)
+  await fetch(GAS_WEB_APP_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload),
+    mode: 'no-cors'
+  })
 
-  try {
-    const response = await fetch(GAS_WEB_APP_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload),
-      signal: controller.signal
-    })
-    return await response.json()
-  } finally {
-    clearTimeout(timeoutId)
-  }
+  return { ok: true, message: '已送出（no-cors 測試）' }
 }
 
 
@@ -449,9 +443,10 @@ async function fetchRecentRecords() {
 }
 
 async function updateGpsDisplay(position, actionLabel) {
-
   console.log('gps position =', position)
   console.log('actionLabel =', actionLabel)
+  console.log('到這裡 1')
+  console.log('目前 user.value =', user.value)
 
   try {
     const { latitude, longitude, accuracy } = position.coords
@@ -472,14 +467,21 @@ async function updateGpsDisplay(position, actionLabel) {
       return
     }
 
+    console.log('到這裡 2')
     const actualUserId = DEV_MODE ? 'DEV-MODE-USER' : user.value.userId
+    console.log('actualUserId =', actualUserId)
+
+    console.log('到這裡 3')
     if (!DEV_MODE && (!window.liff || !window.liff.isLoggedIn())) {
       throw new Error('尚未登入 LINE')
     }
+    console.log('到這裡 4')
 
+    console.log('準備取得 profile')
     const profile = DEV_MODE
       ? { displayName: user.value.name, userId: actualUserId }
       : await window.liff.getProfile()
+    console.log('profile =', profile)
 
     const payload = {
       action: actionLabel,
@@ -491,16 +493,15 @@ async function updateGpsDisplay(position, actionLabel) {
       distance: Math.round(distance),
       inRange: true
     }
-    
 
     console.log('打卡 payload =', payload)
 
     const result = await sendAttendanceToGAS(payload)
+    console.log('打卡 result =', result)
+
     if (!result.ok) {
       throw new Error(result.message || '寫入失敗')
     }
-
-    console.log('打卡 result =', result)
 
     latestAction.value = actionLabel
     if (actionLabel === '已上班') {
