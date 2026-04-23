@@ -149,7 +149,7 @@ import { RouterLink } from 'vue-router'
 
 const DEV_MODE = false
 const LIFF_ID = '2008602232-c53WoD3q'
-const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwmpVjTGyGD-Iczt4oxAPuOA_RqOJ50NTVQriJOkXARb2Sb2Y0IMxsKOsC2htSOteKk/exec'
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyTcVKkWP-IBxNl5j5-NIiO3EsS1f9RWZnxhGWndcQcaB9XkOjfKVh33zPGyYrqS1aZ/exec'
 
 
 const OFFICE_LOCATION = {
@@ -491,6 +491,8 @@ async function updateGpsDisplay(position, actionLabel) {
       : await window.liff.getProfile()
     console.log('profile =', profile)
 
+    console.log('distance before payload =', Math.round(distance))
+
     const payload = {
       action: actionLabel,
       name: profile.displayName,
@@ -502,7 +504,7 @@ async function updateGpsDisplay(position, actionLabel) {
       inRange: true
     }
 
-    console.log('打卡 payload =', payload)
+    console.log('打卡 payload 完整版 =', JSON.stringify(payload))
 
     const result = await sendAttendanceToGAS(payload)
     console.log('打卡 result =', result)
