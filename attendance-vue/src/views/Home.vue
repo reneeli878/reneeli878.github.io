@@ -419,20 +419,24 @@ async function fetchRecentRecords() {
   console.log('開始抓 recent records')
 
   try {
-    const response = await fetch(`${GAS_WEB_APP_URL}?action=recent`)
-    const result = await response.json()
+    let records = []
 
-    if (!result.ok || !Array.isArray(result.records)) {
-      throw new Error(result.message || '讀取失敗')
+    if (user.value.userId) {
+      const myResponse = await fetch(
+        `${GAS_WEB_APP_URL}?action=myRecords&userId=${encodeURIComponent(user.value.userId)}`
+      )
+      const myResult = await myResponse.json()
+
+      if (myResult.ok && Array.isArray(myResult.records)) {
+        records = myResult.records
+      }
     }
-
-    const records = result.records
 
     if (!records.length) {
       recentRecords.value = [
         {
           id: 1,
-          time: '目前沒有打卡紀錄',
+          time: '目前沒有個人打卡紀錄',
           action: '空白',
           name: '完成第一筆打卡後，這裡會自動更新',
           distance: '--',
