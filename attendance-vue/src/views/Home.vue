@@ -392,28 +392,18 @@ async function sendAttendanceToGAS(payload) {
   }
 }
 
+
 async function fetchRecentRecords() {
+  console.log('開始抓 recent records')
   try {
-    let records = []
+    const response = await fetch(`${GAS_WEB_APP_URL}?action=recent`)
+    const result = await response.json()
 
-    if (user.value.userId) {
-      const myResponse = await fetch(
-        `${GAS_WEB_APP_URL}?action=myRecords&userId=${encodeURIComponent(user.value.userId)}`
-      )
-      const myResult = await myResponse.json()
-      if (myResult.ok && Array.isArray(myResult.records) && myResult.records.length) {
-        records = myResult.records
-      }
+    if (!result.ok || !Array.isArray(result.records)) {
+      throw new Error(result.message || '讀取失敗')
     }
 
-    if (!records.length) {
-      const response = await fetch(`${GAS_WEB_APP_URL}?action=recent`)
-      const result = await response.json()
-      if (!result.ok || !Array.isArray(result.records)) {
-        throw new Error(result.message || '讀取失敗')
-      }
-      records = result.records
-    }
+    const records = result.records
 
     if (!records.length) {
       recentRecords.value = [
@@ -458,25 +448,11 @@ async function fetchRecentRecords() {
   }
 }
 
-function handleGpsError(error) {
-  const messageMap = {
-    1: '定位權限被拒絕，請先允許位置存取。',
-    2: '目前無法取得定位資訊，請確認 GPS 或網路狀態。',
-    3: '定位逾時，請到空曠處後再試一次。'
-  }
-
-  gpsStatus.value = 'danger'
-  gps.value = {
-    ...gps.value,
-    accuracy: '--',
-    range: '定位失敗',
-    message: messageMap[error.code] || '定位失敗，請稍後再試。'
-  }
-  dashboard.value = { status: '定位失敗' }
-  isSubmitting.value = false
-}
-
 async function updateGpsDisplay(position, actionLabel) {
+
+  console.log('gps position =', position)
+  console.log('actionLabel =', actionLabel)
+
   try {
     const { latitude, longitude, accuracy } = position.coords
     const distance = calculateDistanceMeters(latitude, longitude, OFFICE_LOCATION.lat, OFFICE_LOCATION.lng)
@@ -515,11 +491,16 @@ async function updateGpsDisplay(position, actionLabel) {
       distance: Math.round(distance),
       inRange: true
     }
+    
+
+    console.log('打卡 payload =', payload)
 
     const result = await sendAttendanceToGAS(payload)
     if (!result.ok) {
       throw new Error(result.message || '寫入失敗')
     }
+
+    console.log('打卡 result =', result)
 
     latestAction.value = actionLabel
     if (actionLabel === '已上班') {
@@ -547,7 +528,10 @@ async function updateGpsDisplay(position, actionLabel) {
   }
 }
 
+
+
 function handleAction(type) {
+  console.log('handleAction type =', type)
   if (!isActionAllowed(type) || isSubmitting.value) return
 
   const actionMap = {
