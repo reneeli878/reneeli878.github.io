@@ -27,7 +27,7 @@
               v-for="item in actionButtons"
               :key="item.key"
               @click="handleAction(item.key)"
-              :disabled="isSubmitting || !isActionAllowed(item.key)"
+              :disabled="!recordsLoaded || isSubmitting || !isActionAllowed(item.key)"
               class="group relative overflow-hidden rounded-[18px] border border-[rgba(219,231,241,0.96)] bg-white/95 px-2.5 py-3.5 text-center shadow-[0_12px_24px_rgba(25,55,90,0.08)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_26px_rgba(25,55,90,0.08)] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0 max-sm:min-h-[108px] max-sm:rounded-[18px] max-sm:px-2.5 max-sm:py-4 active:scale-[0.985]"
             >
               <div class="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,rgba(60,130,191,0.45),rgba(60,130,191,0))]"></div>
@@ -36,7 +36,7 @@
               </div>
               <h4 class="m-0 text-[0.94rem] font-bold text-center text-slate-800 max-sm:text-[0.94rem]">{{ item.label }}</h4>
               <span class="mt-1.5 block text-center text-[0.8rem] leading-[1.4] text-slate-500 max-sm:text-[0.78rem]">
-                {{ isSubmitting ? '送出中...' : getActionSubtext(item) }}
+                {{ !recordsLoaded ? '讀取紀錄中...' : isSubmitting ? '送出中...' : getActionSubtext(item) }}
               </span>
             </button>
           </div>
@@ -146,7 +146,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-
+const recordsLoaded = ref(false)
 const DEV_MODE = false
 const LIFF_ID = '2008602232-c53WoD3q'
 const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwv3gEiBMZ2YmpIEIuL0v_bWTPSVWiN64g-GbGbvKQD5Xxh1D99jqUnG4Ka4Z1yT7d9/exec'
@@ -415,6 +415,7 @@ async function sendAttendanceToGAS(payload) {
 }
 
 async function fetchRecentRecords() {
+  recordsLoaded.value = false
   console.log('開始抓 recent records')
   try {
     const response = await fetch(`${GAS_WEB_APP_URL}?action=recent`)
@@ -562,6 +563,8 @@ async function updateGpsDisplay(position, actionLabel) {
 
 function handleAction(type) {
   console.log('handleAction type =', type)
+
+  if (!recordsLoaded.value) return
   if (!isActionAllowed(type) || isSubmitting.value) return
 
   const actionMap = {
