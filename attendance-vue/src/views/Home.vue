@@ -202,7 +202,7 @@ const statusPillClass = computed(() => {
 const user = ref({
   avatar: '員',
   name: '未登入',
-  dept: '部門：營運管理部',
+  dept: '部門：',
   lineId: '員工編號：--',
   userId: ''
 })
