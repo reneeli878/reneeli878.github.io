@@ -151,6 +151,7 @@ const DEV_MODE = false
 const LIFF_ID = '2008602232-c53WoD3q'
 const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxX0mNlGEMo8IPgPpaivGWGof1qF2fNsdZrSvrFn7aHNZpB2Io4RlK_cRj78q4Jr2Bx/exec'
 
+
 const OFFICE_LOCATION = {
   lat: 24.9585756,
   lng: 121.2461472,
