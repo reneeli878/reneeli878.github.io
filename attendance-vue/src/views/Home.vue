@@ -14,7 +14,7 @@
         </div>
 
         <div class="hidden items-center gap-2 text-xs font-bold text-slate-500 sm:flex">
-          <span class="rounded-full bg-[rgba(60,130,191,0.1)] px-3 py-1.5 text-[rgb(31,77,117)]">開啟 GPS 打卡</span>
+          <span class="rounded-full bg-[rgba(60,130,191,0.1)] px-3 py-1.5 text-[rgb(31,77,117)]">LINE GPS 打卡</span>
         </div>
       </div>
     </header>
@@ -70,8 +70,6 @@
                 <span class="text-[0.75rem] font-bold text-slate-500">目前狀態</span>
               </div>
 
-
-
               <div class="mt-2.5 rounded-[14px] border border-slate-200 bg-[#fbfdff] p-3 max-sm:p-2.5">
                 <div class="mb-2 flex items-center justify-between gap-2.5">
                   <strong class="text-[0.88rem] font-bold">GPS 打卡測試</strong>
@@ -94,7 +92,7 @@
             <section class="w-full rounded-[20px] border border-[rgba(219,231,241,0.96)] bg-white/92 p-4 shadow-[0_12px_24px_rgba(25,55,90,0.08)] max-sm:order-2 max-sm:w-full max-sm:rounded-[18px] max-sm:p-3.5">
               <div class="mb-2.5 flex items-center justify-between gap-2.5">
                 <h3 class="m-0 text-[0.98rem] font-bold">打卡紀錄（最近 5 筆）</h3>
-                <small class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-500">即時資料</small>
+                <small class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-500">個人資料</small>
               </div>
 
               <div class="grid gap-2">
@@ -126,7 +124,7 @@
 
             <div class="grid grid-cols-4 gap-2.5 max-[920px]:grid-cols-2 max-sm:grid-cols-2 max-sm:gap-2.5">
               <RouterLink
-                v-for="item in quickLinks"
+                v-for="item in visibleQuickLinks"
                 :key="item.title"
                 :to="item.to"
                 class="rounded-[20px] border border-[rgba(219,231,241,0.96)] bg-white/92 p-4 text-center shadow-[0_12px_24px_rgba(25,55,90,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_26px_rgba(25,55,90,0.08)] max-sm:min-h-[110px] max-sm:p-3.5"
@@ -148,17 +146,14 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+
 const recordsLoaded = ref(false)
-const DEV_MODE = false
-const LIFF_ID = '2008602232-c53WoD3q'
-const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwgcdzFmexM1ow7DhY_k_F3dWkWWcvb7HIFPOL4r2XeD33eM83o2XwYV1zZcikhO7Zs/exec'
-
-
-const OFFICE_LOCATION = {
-  lat: 24.9585756,
-  lng: 121.2461472,
-  radius: 150
-}
+import {
+  GAS_WEB_APP_URL,
+  LIFF_ID,
+  DEV_MODE,
+  OFFICE_LOCATION
+} from '@/config'
 
 const actionButtons = [
   { key: 'clockin', icon: '🟢', label: '上班打卡', sub: 'Clock In' },
@@ -171,7 +166,7 @@ const quickLinks = [
   { icon: '📝', title: '補打卡申請', desc: '異常補登', to: '/repair-attendance' },
   { icon: '🌴', title: '請假申請', desc: '假單流程', to: '/leave-request' },
   { icon: '📅', title: '出勤查詢', desc: '完整記錄', to: '/my-attendance' },
-  { icon: '🛠️', title: '管理後台', desc: '系統管理', to: '/employee-admin'  }
+  { icon: '🛠️', title: '管理後台', desc: '系統管理', to: '/employee-admin', adminOnly: true }
 ]
 
 const now = ref(new Date())
@@ -180,32 +175,12 @@ const gpsStatus = ref('idle')
 let timer = null
 let workTimer = null
 
-const clock = computed(() => now.value.toLocaleTimeString('zh-TW', { hour12: false }))
-const dateText = computed(() => {
-  const d = now.value
-  const date = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
-  const week = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'][d.getDay()]
-  return `${date} ${week}`
-})
-
-const gpsDotClass = computed(() => {
-  if (gpsStatus.value === 'success') return 'bg-green-500 shadow-[0_0_0_4px_rgba(22,163,74,0.12)]'
-  if (gpsStatus.value === 'danger') return 'bg-red-500 shadow-[0_0_0_4px_rgba(239,68,68,0.12)]'
-  return 'bg-amber-500 shadow-[0_0_0_4px_rgba(245,158,11,0.12)]'
-})
-
-const statusPillClass = computed(() => {
-  if (latestAction.value === '已下班') return 'bg-slate-200 text-slate-600'
-  if (latestAction.value === '外出中') return 'bg-amber-100 text-amber-700'
-  if (latestAction.value === '已上班' || latestAction.value === '返回公司') return 'bg-green-100 text-green-600'
-  return 'bg-slate-100 text-slate-500'
-})
-
 const user = ref({
   avatar: '員',
   name: '未登入',
-  dept: '營運管理部｜專員',
+  dept: '尚未建檔',
   employeeCode: '員工編號：--',
+  role: 'staff',
   userId: ''
 })
 
@@ -232,6 +207,37 @@ const recentRecords = ref([
 
 const latestClockInTime = ref(null)
 const latestAction = ref('未打卡')
+
+const visibleQuickLinks = computed(() => {
+  return quickLinks.filter((item) => {
+    if (item.adminOnly) {
+      return user.value.role === 'manager' || user.value.role === 'admin'
+    }
+    return true
+  })
+})
+
+const clock = computed(() => now.value.toLocaleTimeString('zh-TW', { hour12: false }))
+
+const dateText = computed(() => {
+  const d = now.value
+  const date = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
+  const week = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'][d.getDay()]
+  return `${date} ${week}`
+})
+
+const gpsDotClass = computed(() => {
+  if (gpsStatus.value === 'success') return 'bg-green-500 shadow-[0_0_0_4px_rgba(22,163,74,0.12)]'
+  if (gpsStatus.value === 'danger') return 'bg-red-500 shadow-[0_0_0_4px_rgba(239,68,68,0.12)]'
+  return 'bg-amber-500 shadow-[0_0_0_4px_rgba(245,158,11,0.12)]'
+})
+
+const statusPillClass = computed(() => {
+  if (latestAction.value === '已下班') return 'bg-slate-200 text-slate-600'
+  if (latestAction.value === '外出中') return 'bg-amber-100 text-amber-700'
+  if (latestAction.value === '已上班' || latestAction.value === '返回公司') return 'bg-green-100 text-green-600'
+  return 'bg-slate-100 text-slate-500'
+})
 
 function formatRecordDate(dateString) {
   const date = new Date(dateString)
@@ -348,6 +354,28 @@ async function fetchEmployeeProfile(userId) {
   return result.employee || null
 }
 
+async function autoCreateEmployee(profile) {
+  const response = await fetch(GAS_WEB_APP_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8'
+    },
+    body: JSON.stringify({
+      action: 'autoCreateEmployee',
+      userId: profile.userId,
+      lineName: profile.displayName || ''
+    })
+  })
+
+  const result = await response.json()
+
+  if (!result.ok) {
+    throw new Error(result.message || '自動建立員工資料失敗')
+  }
+
+  return result
+}
+
 async function initLiff() {
   try {
     if (DEV_MODE) {
@@ -356,6 +384,7 @@ async function initLiff() {
         name: '測試使用者',
         dept: '營運管理部｜專員',
         employeeCode: '員工編號：A001',
+        role: 'manager',
         userId: 'DEV-MODE-USER'
       }
       return
@@ -372,7 +401,12 @@ async function initLiff() {
 
     const profile = await window.liff.getProfile()
     const fullName = profile.displayName || '已登入使用者'
-    const employee = await fetchEmployeeProfile(profile.userId)
+    let employee = await fetchEmployeeProfile(profile.userId)
+
+if (!employee) {
+  await autoCreateEmployee(profile)
+  employee = await fetchEmployeeProfile(profile.userId)
+}
 
     const department = employee?.department || ''
     const title = employee?.title || ''
@@ -384,6 +418,7 @@ async function initLiff() {
       name: employee?.employeeName || fullName,
       dept: deptText || '尚未建檔',
       employeeCode: `員工編號：${employee?.employeeCode || '--'}`,
+      role: employee?.role || 'staff',
       userId: profile.userId
     }
   } catch (error) {
@@ -418,7 +453,6 @@ async function sendAttendanceToGAS(payload) {
 
 async function fetchRecentRecords() {
   recordsLoaded.value = false
-  console.log('開始抓 recent records')
 
   try {
     let records = []
@@ -475,35 +509,11 @@ async function fetchRecentRecords() {
       }
     ]
   } finally {
-    console.log('recordsLoaded = true')
     recordsLoaded.value = true
   }
 }
 
-function handleGpsError(error) {
-  const messageMap = {
-    1: '定位權限被拒絕，請先允許位置存取。',
-    2: '目前無法取得定位資訊，請確認 GPS 或網路狀態。',
-    3: '定位逾時，請到空曠處後再試一次。'
-  }
-
-  gpsStatus.value = 'danger'
-  gps.value = {
-    ...gps.value,
-    accuracy: '--',
-    range: '定位失敗',
-    message: messageMap[error.code] || '定位失敗，請稍後再試。'
-  }
-  dashboard.value = { status: '定位失敗' }
-  isSubmitting.value = false
-}
-
 async function updateGpsDisplay(position, actionLabel) {
-  console.log('gps position =', position)
-  console.log('actionLabel =', actionLabel)
-  console.log('到這裡 1')
-  console.log('目前 user.value =', user.value)
-
   try {
     const { latitude, longitude, accuracy } = position.coords
     const distance = calculateDistanceMeters(latitude, longitude, OFFICE_LOCATION.lat, OFFICE_LOCATION.lng)
@@ -523,23 +533,14 @@ async function updateGpsDisplay(position, actionLabel) {
       return
     }
 
-    console.log('到這裡 2')
     const actualUserId = DEV_MODE ? 'DEV-MODE-USER' : user.value.userId
-    console.log('actualUserId =', actualUserId)
-
-    console.log('到這裡 3')
     if (!DEV_MODE && (!window.liff || !window.liff.isLoggedIn())) {
       throw new Error('尚未登入 LINE')
     }
-    console.log('到這裡 4')
 
-    console.log('準備取得 profile')
     const profile = DEV_MODE
       ? { displayName: user.value.name, userId: actualUserId }
       : await window.liff.getProfile()
-    console.log('profile =', profile)
-
-    console.log('distance before payload =', Math.round(distance))
 
     const payload = {
       action: actionLabel,
@@ -552,10 +553,7 @@ async function updateGpsDisplay(position, actionLabel) {
       inRange: true
     }
 
-    console.log('打卡 payload 完整版 =', JSON.stringify(payload))
-
     const result = await sendAttendanceToGAS(payload)
-    console.log('打卡 result =', result)
 
     if (!result.ok) {
       throw new Error(result.message || '寫入失敗')
@@ -587,11 +585,25 @@ async function updateGpsDisplay(position, actionLabel) {
   }
 }
 
+function handleGpsError(error) {
+  const messageMap = {
+    1: '定位權限被拒絕，請先允許位置存取。',
+    2: '目前無法取得定位資訊，請確認 GPS 或網路狀態。',
+    3: '定位逾時，請到空曠處後再試一次。'
+  }
 
+  gpsStatus.value = 'danger'
+  gps.value = {
+    ...gps.value,
+    accuracy: '--',
+    range: '定位失敗',
+    message: messageMap[error.code] || '定位失敗，請稍後再試。'
+  }
+  dashboard.value = { status: '定位失敗' }
+  isSubmitting.value = false
+}
 
 function handleAction(type) {
-  console.log('handleAction type =', type)
-
   if (!recordsLoaded.value) return
   if (!isActionAllowed(type) || isSubmitting.value) return
 

@@ -155,12 +155,11 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { RouterLink } from "vue-router";
-
-const DEV_MODE = false;
-const LIFF_ID = "2008602232-c53WoD3q";
-const GAS_WEB_APP_URL =
-  "https://script.google.com/macros/s/AKfycbwgcdzFmexM1ow7DhY_k_F3dWkWWcvb7HIFPOL4r2XeD33eM83o2XwYV1zZcikhO7Zs/exec";
-
+import {
+  GAS_WEB_APP_URL,
+  LIFF_ID,
+  DEV_MODE
+} from '@/config'
 const loading = ref(false);
 const errorMessage = ref("");
 const records = ref([]);

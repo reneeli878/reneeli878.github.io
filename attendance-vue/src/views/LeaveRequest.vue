@@ -60,15 +60,22 @@
             </div>
 
             <div>
-              <label class="mb-1 block text-[0.78rem] font-bold text-slate-500">請假單位</label>
-              <select
-                v-model="form.unit"
-                class="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-[0.92rem] outline-none focus:border-sky-300"
-              >
-                <option value="天">天</option>
-                <option value="小時">小時</option>
-              </select>
-            </div>
+  <label class="mb-1 block text-[0.78rem] font-bold text-slate-500">選擇主管</label>
+  <select
+    v-model="form.managerUserId"
+    @change="syncManagerName"
+    class="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-[0.92rem] outline-none focus:border-sky-300"
+  >
+    <option value="">請選擇主管</option>
+    <option
+      v-for="manager in managers"
+      :key="manager.userId"
+      :value="manager.userId"
+    >
+      {{ manager.name }}
+    </option>
+  </select>
+</div>
 
             <div>
               <label class="mb-1 block text-[0.78rem] font-bold text-slate-500">開始日期</label>
@@ -106,34 +113,26 @@
               />
             </div>
 
-            <div>
-              <label class="mb-1 block text-[0.78rem] font-bold text-slate-500">請假數量</label>
-              <input
-                v-model.number="form.amount"
-                type="number"
-                min="0"
-                step="0.5"
-                class="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-[0.92rem] outline-none focus:border-sky-300"
-              />
-            </div>
+            <div class="grid grid-cols-[1fr_120px] gap-2 max-sm:grid-cols-[1fr_96px]">
+  <input
+    v-model.number="form.amount"
+    type="number"
+    min="0"
+    step="0.5"
+    placeholder="輸入數字"
+    class="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-[0.92rem] outline-none focus:border-sky-300"
+  />
 
-            <div>
-              <label class="mb-1 block text-[0.78rem] font-bold text-slate-500">選擇主管</label>
-              <select
-                v-model="form.managerUserId"
-                @change="syncManagerName"
-                class="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-[0.92rem] outline-none focus:border-sky-300"
-              >
-                <option value="">請選擇主管</option>
-                <option
-                  v-for="manager in managers"
-                  :key="manager.userId"
-                  :value="manager.userId"
-                >
-                  {{ manager.name }}
-                </option>
-              </select>
-            </div>
+  <select
+    v-model="form.unit"
+    class="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-[0.92rem] outline-none focus:border-sky-300"
+  >
+    <option value="天">天</option>
+    <option value="小時">小時</option>
+  </select>
+</div>
+
+            
 
             <div class="md:col-span-2">
               <label class="mb-1 block text-[0.78rem] font-bold text-slate-500">請假原因</label>
@@ -258,6 +257,25 @@
                     原因：{{ record.reason }}
                   </div>
 
+                  <div v-if="record.attachmentUrl" class="mt-2">
+  <div class="mb-1 text-[0.78rem] text-slate-400">
+    附件：{{ record.attachmentName || '查看附件' }}
+  </div>
+
+  <a
+    :href="record.attachmentUrl"
+    target="_blank"
+    rel="noopener noreferrer"
+    class="block overflow-hidden rounded-xl border border-slate-200 bg-white"
+  >
+    <img
+      :src="record.attachmentUrl"
+      alt="附件預覽"
+      class="max-h-48 w-full object-contain"
+    />
+  </a>
+</div>
+
                   <div class="mt-1 text-[0.78rem] leading-[1.5] text-slate-400">
                     主管：{{ record.managerName || '未指定' }}
                   </div>
@@ -286,9 +304,11 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
-const DEV_MODE = false
-const LIFF_ID = '2008602232-c53WoD3q'
-const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwgcdzFmexM1ow7DhY_k_F3dWkWWcvb7HIFPOL4r2XeD33eM83o2XwYV1zZcikhO7Zs/exec'
+import {
+  GAS_WEB_APP_URL,
+  LIFF_ID,
+  DEV_MODE
+} from '@/config'
 
 const managers = [
   { name: '王主任', userId: 'U_MANAGER_001' },
@@ -311,18 +331,17 @@ const message = ref('')
 const recordFilter = ref('pending')
 
 const form = reactive({
-  leaveType: '',
-  unit: '天',
-  startDate: '',
-  endDate: '',
-  startTime: '',
-  endTime: '',
-  amount: 1,
+  type: '',
+  targetDate: '',
+  targetTime: '',
   reason: '',
   managerName: '',
   managerUserId: '',
+
   attachmentFile: null,
-  attachmentName: ''
+  attachmentName: '',
+  attachmentBase64: '',
+  attachmentMimeType: ''
 })
 
 const leaveRecords = ref([])
@@ -362,8 +381,33 @@ function syncManagerName() {
 
 function handleFileChange(event) {
   const file = event.target.files?.[0] || null
+
   form.attachmentFile = file
   form.attachmentName = file ? file.name : ''
+  form.attachmentBase64 = ''
+  form.attachmentMimeType = ''
+
+  if (!file) return
+
+  const maxSize = 5 * 1024 * 1024
+  if (file.size > maxSize) {
+    message.value = '附件請勿超過 5MB。'
+    form.attachmentFile = null
+    form.attachmentName = ''
+    return
+  }
+
+  const reader = new FileReader()
+
+  reader.onload = () => {
+    const result = String(reader.result || '')
+    const base64 = result.split(',')[1] || ''
+
+    form.attachmentBase64 = base64
+    form.attachmentMimeType = file.type
+  }
+
+  reader.readAsDataURL(file)
 }
 
 function getStatusClass(status) {
@@ -385,6 +429,8 @@ function resetForm() {
   form.managerUserId = ''
   form.attachmentFile = null
   form.attachmentName = ''
+  form.attachmentBase64 = ''
+  form.attachmentMimeType = ''
 }
 
 async function fetchEmployeeProfile(userId) {
@@ -505,7 +551,9 @@ async function submitForm() {
       reason: form.reason,
       managerName: form.managerName,
       managerUserId: form.managerUserId,
-      attachmentName: form.attachmentName
+      attachmentName: form.attachmentName,
+      attachmentBase64: form.attachmentBase64,
+      attachmentMimeType: form.attachmentMimeType
     }
 
     const response = await fetch(GAS_WEB_APP_URL, {
