@@ -116,12 +116,12 @@
               >
                 <option value="">請選擇主管</option>
                 <option
-                  v-for="manager in managers"
-                  :key="manager.userId"
-                  :value="manager.userId"
-                >
-                  {{ manager.name }}
-                </option>
+  v-for="manager in managers"
+  :key="manager.userId"
+  :value="manager.userId"
+>
+  {{ manager.name }}{{ manager.department ? `｜${manager.department}` : '' }}{{ manager.title ? `｜${manager.title}` : '' }}
+</option>
               </select>
             </div>
 
@@ -314,11 +314,7 @@ import { RouterLink } from "vue-router";
 
 import { GAS_WEB_APP_URL, LIFF_ID, DEV_MODE } from "@/config";
 
-const managers = [
-  { name: "王主任", userId: "U_MANAGER_001" },
-  { name: "李經理", userId: "U_MANAGER_002" },
-  { name: "陳主管", userId: "U_MANAGER_003" },
-];
+const managers = ref([])
 
 const currentUser = ref({
   userId: "",
@@ -365,8 +361,13 @@ const filteredRepairRecords = computed(() => {
 });
 
 function syncManagerName() {
-  const manager = managers.find((item) => item.userId === form.managerUserId);
-  form.managerName = manager ? manager.name : "";
+  const manager = managers.value.find(
+    item => item.userId === form.managerUserId
+  )
+
+  form.managerName = manager
+    ? `${manager.name}${manager.title ? `｜${manager.title}` : ''}`
+    : ''
 }
 
 function handleFileChange(event) {
@@ -478,6 +479,29 @@ async function initLiff() {
   }
 }
 
+async function fetchManagers() {
+  try {
+    const response = await fetch(`${GAS_WEB_APP_URL}?action=getManagers`)
+    const result = await response.json()
+
+    if (!result.ok || !Array.isArray(result.records)) {
+      throw new Error(result.message || '讀取主管資料失敗')
+    }
+
+    managers.value = result.records
+      .filter(item => item.userId)
+      .map(item => ({
+        name: item.employeeName || item.lineName || '未命名主管',
+        userId: item.userId,
+        department: item.department || '',
+        title: item.title || ''
+      }))
+  } catch (error) {
+    console.error('讀取主管資料失敗:', error)
+    message.value = error.message || '讀取主管資料失敗'
+  }
+}
+
 async function fetchRepairRequests() {
   if (!currentUser.value.userId) return;
 
@@ -562,7 +586,8 @@ async function submitForm() {
 }
 
 onMounted(async () => {
-  await initLiff();
-  await fetchRepairRequests();
-});
+  await initLiff()
+  await fetchManagers()
+  await fetchRepairRequests()
+})
 </script>
