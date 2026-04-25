@@ -138,21 +138,23 @@
               :loading="loadingRepairReviews"
               @set-filter="reviewFilter = $event"
               @refresh="fetchRepairReviews"
-              @review="handleReview"
+              :on-review="handleReview"
+              @reviewed="applyReviewedRecord"
             />
           </section>
 
           <section v-if="activeTab === 'leave'" class="rounded-[20px] border border-[rgba(219,231,241,0.96)] bg-white/92 p-4 shadow-[0_12px_24px_rgba(25,55,90,0.08)]">
             <ReviewBlock
-              title="假單審核"
-              type="leave"
-              :records="filteredLeaveReviews"
-              :filter="reviewFilter"
-              :loading="loadingLeaveReviews"
-              @set-filter="reviewFilter = $event"
-              @refresh="fetchLeaveReviews"
-              @review="handleReview"
-            />
+  title="假單審核"
+  type="leave"
+  :records="filteredLeaveReviews"
+  :filter="reviewFilter"
+  :loading="loadingLeaveReviews"
+  :on-review="handleReview"
+  @reviewed="applyReviewedRecord"
+  @set-filter="reviewFilter = $event"
+  @refresh="fetchLeaveReviews"
+/>
           </section>
         </div>
       </div>
@@ -167,16 +169,20 @@ import { GAS_WEB_APP_URL, LIFF_ID, DEV_MODE } from '@/config'
 
 const ReviewBlock = defineComponent({
   props: {
-    title: String,
-    type: String,
-    records: Array,
-    filter: String,
-    loading: Boolean
-  },
-  emits: ['set-filter', 'refresh', 'review'],
+  title: String,
+  type: String,
+  records: Array,
+  filter: String,
+  loading: Boolean,
+  onReview: Function
+},
+emits: ['set-filter', 'refresh', 'reviewed'],
   setup(props, { emit }) {
     const notes = ref({})
-const processingId = ref('')
+    const processingId = ref('')
+    const successId = ref('')
+    const successStatus = ref('')
+    const toast = ref('')
 
     const badgeClass = (status) => {
       if (status === '已核准') return 'bg-green-100 text-green-700'
@@ -184,17 +190,76 @@ const processingId = ref('')
       return 'bg-amber-100 text-amber-700'
     }
 
+    async function submitReview(record, status) {
+  if (processingId.value) return
+
+  const payload = {
+    type: props.type,
+    requestId: record.requestId,
+    status,
+    reviewNote: notes.value[record.requestId] || ''
+  }
+
+  processingId.value = record.requestId
+  successId.value = ''
+  successStatus.value = ''
+  toast.value = ''
+
+  try {
+    const updatedRecord = await props.onReview(payload)
+
+    successId.value = record.requestId
+    successStatus.value = status
+    toast.value = status === '已核准' ? '已核准申請' : '已退回申請'
+
+    await new Promise(resolve => setTimeout(resolve, 700))
+
+    emit('reviewed', {
+      payload,
+      record: updatedRecord
+    })
+
+    toast.value = ''
+    successId.value = ''
+    successStatus.value = ''
+  } finally {
+    processingId.value = ''
+  }
+}
+
+    const renderSpinner = () => h('span', {
+      class: 'mr-1 inline-block h-3 w-3 animate-spin rounded-full border-2 border-white/60 border-t-white align-[-2px]'
+    })
+
     return () => h('div', [
+      toast.value
+        ? h('div', {
+          class: `mb-3 rounded-xl px-3 py-2 text-sm font-bold shadow-sm ${
+            successStatus.value === '已核准'
+              ? 'border border-green-200 bg-green-50 text-green-700'
+              : 'border border-red-200 bg-red-50 text-red-700'
+          }`
+        }, toast.value)
+        : null,
+
       h('div', { class: 'mb-3 flex flex-wrap items-center justify-between gap-2.5' }, [
         h('h2', { class: 'm-0 text-[1rem] font-bold' }, props.title),
         h('div', { class: 'flex items-center gap-2' }, [
           h('button', {
             onClick: () => emit('set-filter', 'pending'),
-            class: `rounded-full px-3 py-1.5 text-xs font-bold ${props.filter === 'pending' ? 'bg-[rgb(31,77,117)] text-white' : 'bg-slate-100 text-slate-500'}`
+            class: `rounded-full px-3 py-1.5 text-xs font-bold ${
+              props.filter === 'pending'
+                ? 'bg-[rgb(31,77,117)] text-white'
+                : 'bg-slate-100 text-slate-500'
+            }`
           }, '未審核'),
           h('button', {
             onClick: () => emit('set-filter', 'reviewed'),
-            class: `rounded-full px-3 py-1.5 text-xs font-bold ${props.filter === 'reviewed' ? 'bg-[rgb(31,77,117)] text-white' : 'bg-slate-100 text-slate-500'}`
+            class: `rounded-full px-3 py-1.5 text-xs font-bold ${
+              props.filter === 'reviewed'
+                ? 'bg-[rgb(31,77,117)] text-white'
+                : 'bg-slate-100 text-slate-500'
+            }`
           }, '已審核'),
           h('button', {
             disabled: props.loading,
@@ -213,7 +278,22 @@ const processingId = ref('')
             ? (record.type || '補打卡申請')
             : (record.leaveType || '請假申請')
 
-          return h('div', { key: record.requestId, class: 'rounded-xl border border-slate-200 bg-[#fbfdff] px-3 py-3' }, [
+          const isProcessing = processingId.value === record.requestId
+          const isSuccess = successId.value === record.requestId
+          const successClass = successStatus.value === '已核准'
+  ? 'border-green-300 bg-green-50/70 translate-x-6 opacity-0 scale-[0.98]'
+  : 'border-red-300 bg-red-50/70 translate-x-6 opacity-0 scale-[0.98]'
+
+          return h('div', {
+            key: record.requestId,
+            class: `rounded-xl border px-3 py-3 transition-all duration-700 ease-out ${
+              isSuccess
+                ? successClass
+                : isProcessing
+                  ? 'border-slate-300 bg-slate-50 opacity-70'
+                  : 'border-slate-200 bg-[#fbfdff]'
+            }`
+          }, [
             h('div', { class: 'flex items-start justify-between gap-3' }, [
               h('div', { class: 'min-w-0 flex-1' }, [
                 h('div', { class: 'flex flex-wrap items-center gap-2' }, [
@@ -225,7 +305,7 @@ const processingId = ref('')
 
                 props.type === 'repair'
                   ? h('div', { class: 'mt-1 text-[0.82rem] leading-[1.55] text-slate-500' }, `補卡日期：${record.targetDate || '--'} ${record.targetTime || ''}`)
-                  : h('div', { class: 'mt-1 text-[0.82rem] leading-[1.55] text-slate-500' }, `請假日期：${record.startDate || '--'} ~ ${record.endDate || '--'}｜${record.amount || '--'} ${record.unit || ''}`),
+                  : h('div', { class: 'mt-1 text-[0.82rem] leading-[1.55] text-slate-500' }, `區間：${record.startDate || '--'} ~ ${record.endDate || '--'}｜${record.amount || '--'} ${record.unit || ''}`),
 
                 h('div', { class: 'mt-1 text-[0.82rem] leading-[1.55] text-slate-500' }, `原因：${record.reason || '--'}`),
 
@@ -237,7 +317,11 @@ const processingId = ref('')
                     class: 'mt-2 block overflow-hidden rounded-xl border border-slate-200 bg-white'
                   }, [
                     h('div', { class: 'px-2 py-1 text-[0.75rem] font-bold text-slate-500' }, `附件：${record.attachmentName || '查看附件'}`),
-                    h('img', { src: record.attachmentUrl, alt: '附件預覽', class: 'max-h-48 w-full object-contain' })
+                    h('img', {
+                      src: record.attachmentUrl,
+                      alt: '附件預覽',
+                      class: 'max-h-48 w-full object-contain'
+                    })
                   ])
                   : null,
 
@@ -248,32 +332,42 @@ const processingId = ref('')
                   ])
                   : h('div', [
                     h('textarea', {
+                      disabled: isProcessing,
                       value: notes.value[record.requestId] || '',
                       onInput: (event) => { notes.value[record.requestId] = event.target.value },
                       placeholder: '審核備註（可空白）',
                       rows: 2,
-                      class: 'mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[0.86rem] outline-none focus:border-sky-300'
+                      class: 'mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[0.86rem] outline-none focus:border-sky-300 disabled:opacity-50'
                     }),
                     h('div', { class: 'mt-2 flex gap-2' }, [
                       h('button', {
-                        onClick: () => emit('review', { type: props.type, requestId: record.requestId, status: '已核准', reviewNote: notes.value[record.requestId] || '' }),
-                        class: 'rounded-xl bg-green-600 px-3 py-2 text-xs font-bold text-white'
-                      }, '核准'),
+                        disabled: isProcessing || !!processingId.value,
+                        onClick: () => submitReview(record, '已核准'),
+                        class: 'rounded-xl bg-green-600 px-3 py-2 text-xs font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-50'
+                      }, [
+                        isProcessing ? renderSpinner() : null,
+                        isProcessing ? '處理中...' : '核准'
+                      ]),
                       h('button', {
-                        onClick: () => emit('review', { type: props.type, requestId: record.requestId, status: '已退回', reviewNote: notes.value[record.requestId] || '' }),
-                        class: 'rounded-xl bg-red-500 px-3 py-2 text-xs font-bold text-white'
-                      }, '退回')
+                        disabled: isProcessing || !!processingId.value,
+                        onClick: () => submitReview(record, '已退回'),
+                        class: 'rounded-xl bg-red-500 px-3 py-2 text-xs font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-50'
+                      }, [
+                        isProcessing ? renderSpinner() : null,
+                        isProcessing ? '處理中...' : '退回'
+                      ])
                     ])
                   ])
               ]),
-              h('span', { class: `whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-bold ${badgeClass(record.status)}` }, record.status || '待審核')
+              h('span', {
+                class: `whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-bold ${badgeClass(record.status)}`
+              }, record.status || '待審核')
             ])
           ])
         }))
     ])
   }
 })
-
 const tabs = [
   { key: 'employees', label: '員工管理' },
   { key: 'repair', label: '補打卡審核' },
@@ -380,6 +474,33 @@ function editEmployee(employee) {
   form.value = { ...emptyForm(), ...employee }
   editingMode.value = 'edit'
 }
+
+function applyReviewedRecord({ payload, record }) {
+  const updatedRecord = {
+    ...record,
+    status: payload.status,
+    reviewNote: payload.reviewNote || record?.reviewNote || '',
+    reviewTime: record?.reviewTime || new Date().toLocaleString('zh-TW', { hour12: false })
+  }
+
+  if (payload.type === 'repair') {
+    repairReviews.value = repairReviews.value.map((item) =>
+      item.requestId === payload.requestId
+        ? { ...item, ...updatedRecord }
+        : item
+    )
+  } else {
+    leaveReviews.value = leaveReviews.value.map((item) =>
+      item.requestId === payload.requestId
+        ? { ...item, ...updatedRecord }
+        : item
+    )
+  }
+
+  message.value = `已更新為 ${payload.status}`
+}
+
+
 
 async function fetchEmployeeProfile(userId) {
   const response = await fetch(`${GAS_WEB_APP_URL}?action=getEmployee&userId=${encodeURIComponent(userId)}`)
@@ -535,10 +656,10 @@ async function fetchLeaveReviews() {
 }
 
 async function handleReview(payload) {
-  message.value = ''
-
   try {
-    const action = payload.type === 'repair' ? 'reviewRepairRequest' : 'reviewLeaveRequest'
+    const action = payload.type === 'repair'
+      ? 'reviewRepairRequest'
+      : 'reviewLeaveRequest'
 
     const response = await fetch(GAS_WEB_APP_URL, {
       method: 'POST',
@@ -553,19 +674,17 @@ async function handleReview(payload) {
 
     const result = await response.json()
 
-    if (!result.ok) throw new Error(result.message || '審核失敗')
-
-    message.value = `已更新為 ${payload.status}`
-
-    if (payload.type === 'repair') {
-      await fetchRepairReviews()
-    } else {
-      await fetchLeaveReviews()
+    if (!result.ok) {
+      throw new Error(result.message || '審核失敗')
     }
+
+    return result.record
   } catch (error) {
     message.value = error.message || '審核失敗'
+    throw error
   }
 }
+
 
 onMounted(async () => {
   await initLiff()
