@@ -306,7 +306,18 @@ emits: ['set-filter', 'refresh', 'reviewed'],
                 props.type === 'repair'
                   ? h('div', { class: 'mt-1 text-[0.82rem] leading-[1.55] text-slate-500' }, `補卡日期：${record.targetDate || '--'} ${record.targetTime || ''}`)
                   : h('div', { class: 'mt-1 text-[0.82rem] leading-[1.55] text-slate-500' }, `區間：${record.startDate || '--'} ~ ${record.endDate || '--'}｜${record.amount || '--'} ${record.unit || ''}`),
-
+props.type === 'leave'
+  ? h('div', {
+    class: `mt-2 rounded-xl px-3 py-2 text-[0.8rem] font-bold ${
+      isLeaveBalanceInsufficient(record)
+        ? 'bg-red-50 text-red-700 border border-red-200'
+        : 'bg-green-50 text-green-700 border border-green-200'
+    }`
+  }, isLeaveBalanceInsufficient(record)
+    ? `⚠️ 餘額不足：${getLeaveBalanceText(record)}`
+    : `餘額：${getLeaveBalanceText(record)}`
+  )
+  : null,
                 h('div', { class: 'mt-1 text-[0.82rem] leading-[1.55] text-slate-500' }, `原因：${record.reason || '--'}`),
 
                 record.attachmentUrl
@@ -500,7 +511,45 @@ function applyReviewedRecord({ payload, record }) {
   message.value = `已更新為 ${payload.status}`
 }
 
+function getLeaveBalanceText(record) {
+  const amount = Number(record.amount || 0)
 
+  if (record.leaveType === '特休') {
+    const remain = Number(record.annualLeaveDefault || 0) - Number(record.annualLeaveUsed || 0)
+    return `特休剩餘 ${remain} 天，核准後剩 ${remain - amount} 天`
+  }
+
+  if (record.leaveType === '補休') {
+    const remain = Number(record.compOffDefault || 0) - Number(record.compOffUsed || 0)
+    return `補休剩餘 ${remain} 小時，核准後剩 ${remain - amount} 小時`
+  }
+
+  if (record.leaveType === '病假') {
+    return `病假已用 ${record.sickLeaveUsed || 0} 天`
+  }
+
+  if (record.leaveType === '事假') {
+    return `事假已用 ${record.personalLeaveUsed || 0} 天`
+  }
+
+  return `${record.leaveType || '假別'} 已用紀錄：${amount || 0} ${record.unit || ''}`
+}
+
+function isLeaveBalanceInsufficient(record) {
+  const amount = Number(record.amount || 0)
+
+  if (record.leaveType === '特休') {
+    const remain = Number(record.annualLeaveDefault || 0) - Number(record.annualLeaveUsed || 0)
+    return amount > remain
+  }
+
+  if (record.leaveType === '補休') {
+    const remain = Number(record.compOffDefault || 0) - Number(record.compOffUsed || 0)
+    return amount > remain
+  }
+
+  return false
+}
 
 async function fetchEmployeeProfile(userId) {
   const response = await fetch(`${GAS_WEB_APP_URL}?action=getEmployee&userId=${encodeURIComponent(userId)}`)
